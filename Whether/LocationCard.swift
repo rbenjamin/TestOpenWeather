@@ -86,7 +86,7 @@ struct LocationCard: View {
     }
 
     @ViewBuilder
-    var backgroundGradient: some View {
+    var backgroundView: some View {
         ZStack {
             self.backgroundColor
                 .edgesIgnoringSafeArea(.bottom)
@@ -205,8 +205,7 @@ struct LocationCard: View {
 
         })
         .background {
-            self.backgroundGradient
-
+            self.backgroundView
         }
         .onDisappear {
             self.particleViewSettings = nil

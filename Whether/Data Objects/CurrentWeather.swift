@@ -84,11 +84,11 @@ struct CurrentWeather: WeatherData, Identifiable, Codable, Hashable, Equatable {
     func backgroundColor(daytime: Bool) -> Color {
         if daytime {
             return WeatherMeshColors
-                    .clearSkyDay(ConditionModifier(temperature: self.mainWeather.feelsLike.value))
+                .clearSkyDay(.hot)
                     .backgroundFillColor
         }
         return WeatherMeshColors
-                .clearSkyNight(ConditionModifier(temperature: self.mainWeather.feelsLike.value))
+            .clearSkyNight(.hot)
                 .backgroundFillColor
 
     }
@@ -96,12 +96,12 @@ struct CurrentWeather: WeatherData, Identifiable, Codable, Hashable, Equatable {
     func backgroundUIColor(daytime: Bool) -> UIColor {
         if daytime {
             return WeatherMeshColors
-                    .clearSkyDay(ConditionModifier(temperature: self.mainWeather.feelsLike.value))
+                .clearSkyDay(.hot)
                     .backgoundFillUIColor
 
         }
         return WeatherMeshColors
-                .clearSkyNight(ConditionModifier(temperature: self.mainWeather.feelsLike.value))
+            .clearSkyNight(.hot)
                 .backgoundFillUIColor
 
     }

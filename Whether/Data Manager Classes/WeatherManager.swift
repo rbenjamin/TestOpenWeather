@@ -14,7 +14,6 @@ import SwiftData
 @MainActor
 class WeatherManager: NSObject, ObservableObject {
     let settings: Settings
-    let apiKey = ""
     /// Currently required for pressure readings: Need number formatter to get 2 decimals in inHG and mmHG.
     let pressureFormatter: MeasurementFormatter
     let percentFormatter: NumberFormatter

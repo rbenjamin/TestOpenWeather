@@ -142,7 +142,7 @@ struct ContentView: View {
                                  currentLocation: self.$visibleLocation,
                                  isDaytime: self.$isDaytime,
                                  backgroundColor: self.$backgroundColor,
-                                 apiKey: self.weatherManager.apiKey,
+                                 apiKey: APIKey.key,
                                  downloadManager: self.weatherManager.downloadManager,
                                  decoder: self.weatherManager.decoder,
                                  percentFormatter: self.weatherManager.percentFormatter,
