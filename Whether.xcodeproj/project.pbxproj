@@ -9,12 +9,14 @@
 /* Begin PBXBuildFile section */
 		B539BB5B2CD94FEB0028DEFD /* SwiftData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B539BB5A2CD94FEB0028DEFD /* SwiftData.framework */; };
 		B57665D22CC9560A00D3659A /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B57665D12CC9560A00D3659A /* CoreLocation.framework */; };
+		B57F6DE92CF907A500192ECE /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = B57F6DE82CF907A500192ECE /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		B539BB5A2CD94FEB0028DEFD /* SwiftData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftData.framework; path = System/Library/Frameworks/SwiftData.framework; sourceTree = SDKROOT; };
 		B57665A42CC85BCC00D3659A /* Whether.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Whether.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B57665D12CC9560A00D3659A /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		B57F6DE82CF907A500192ECE /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -23,28 +25,16 @@
 			membershipExceptions = (
 				Info.plist,
 				"Location Search & Management/UILocationsList.swift",
-				README.md,
 			);
 			target = B57665A32CC85BCC00D3659A /* Whether */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-		B57F6DEA2CF907AE00192ECE /* Exceptions for "Whether" folder in "Compile Sources" phase from "Whether" target */ = {
-			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
-			buildPhase = B57665A02CC85BCC00D3659A /* Sources */;
-			membershipExceptions = (
-				README.md,
-			);
-		};
-/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B57665A62CC85BCC00D3659A /* Whether */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				B57665B42CC85BCE00D3659A /* Exceptions for "Whether" folder in "Whether" target */,
-				B57F6DEA2CF907AE00192ECE /* Exceptions for "Whether" folder in "Compile Sources" phase from "Whether" target */,
 			);
 			path = Whether;
 			sourceTree = "<group>";
@@ -70,6 +60,7 @@
 				B57665A62CC85BCC00D3659A /* Whether */,
 				B57665D02CC9560900D3659A /* Frameworks */,
 				B57665A52CC85BCC00D3659A /* Products */,
+				B57F6DE82CF907A500192ECE /* README.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -168,6 +159,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B57F6DE92CF907A500192ECE /* README.md in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
