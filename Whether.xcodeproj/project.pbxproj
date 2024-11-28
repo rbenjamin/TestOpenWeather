@@ -23,16 +23,28 @@
 			membershipExceptions = (
 				Info.plist,
 				"Location Search & Management/UILocationsList.swift",
+				README.md,
 			);
 			target = B57665A32CC85BCC00D3659A /* Whether */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		B57F6DEA2CF907AE00192ECE /* Exceptions for "Whether" folder in "Compile Sources" phase from "Whether" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = B57665A02CC85BCC00D3659A /* Sources */;
+			membershipExceptions = (
+				README.md,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B57665A62CC85BCC00D3659A /* Whether */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				B57665B42CC85BCE00D3659A /* Exceptions for "Whether" folder in "Whether" target */,
+				B57F6DEA2CF907AE00192ECE /* Exceptions for "Whether" folder in "Compile Sources" phase from "Whether" target */,
 			);
 			path = Whether;
 			sourceTree = "<group>";
