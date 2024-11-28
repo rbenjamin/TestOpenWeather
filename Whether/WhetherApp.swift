@@ -10,9 +10,11 @@ import SwiftData
 
 @main
 struct WhetherApp: App {
+    @Environment(\.scenePhase) var scenePhase
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            WeatherLocation.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -28,5 +30,12 @@ struct WhetherApp: App {
             ContentView()
         }
         .modelContainer(sharedModelContainer)
+        .onChange(of: self.scenePhase) { _, newValue in
+            switch newValue {
+            case .background:
+                try? self.sharedModelContainer.mainContext.save()
+            default: break
+            }
+        }
     }
 }

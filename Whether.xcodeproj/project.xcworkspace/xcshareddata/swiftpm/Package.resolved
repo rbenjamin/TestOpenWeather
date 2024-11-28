@@ -1,13 +1,13 @@
 {
-  "originHash" : "0e844115085a29c3fe2066b46b8b0b09e696f718ae4b9efc9e5d1c127ae09559",
+  "originHash" : "1fa961aa1dc717cea452f3389668f0f99a254f07e4eb11d190768a53798f744f",
   "pins" : [
     {
-      "identity" : "vortex",
+      "identity" : "swiftlintplugins",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/twostraws/Vortex",
+      "location" : "https://github.com/SimplyDanny/SwiftLintPlugins",
       "state" : {
-        "revision" : "bb48b128d3c13c68c68e83833c622eec9f6c701f",
-        "version" : "1.0.1"
+        "revision" : "f9731bef175c3eea3a0ca960f1be78fcc2bc7853",
+        "version" : "0.57.1"
       }
     }
   ],

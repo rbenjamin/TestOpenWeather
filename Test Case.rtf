@@ -1,0 +1,62 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2761
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red211\green111\blue55;\red11\green12\blue13;\red187\green179\blue255;
+\red213\green47\blue132;\red93\green216\blue255;\red208\green168\blue255;\red65\green161\blue192;\red158\green241\blue221;
+\red252\green106\blue93;\red103\green183\blue164;\red103\green183\blue164;\red161\green103\blue230;\red208\green191\blue105;
+\red158\green241\blue221;}
+{\*\expandedcolortbl;;\csgenericrgb\c82610\c43418\c21382;\csgenericrgb\c4501\c4587\c5277;\csgenericrgb\c73169\c70335\c100000\c85000;
+\csgenericrgb\c83706\c18516\c51709;\csgenericrgb\c36295\c84643\c99897;\csgenericrgb\c81569\c65882\c100000;\csgenericrgb\c25490\c63137\c75294;\csgenericrgb\c61961\c94510\c86667;
+\csgenericrgb\c98912\c41558\c36568;\csgenericrgb\c40538\c71705\c64209;\csgenericrgb\c40392\c71765\c64314;\csgenericrgb\c63137\c40392\c90196;\csgenericrgb\c81498\c74939\c41233;
+\csgenericrgb\c62145\c94386\c86819;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab692
+\pard\tx692\pardeftab692\partightenfactor0
+
+\f0\fs28 \cf2 \cb3 //\cf4 \
+\cf2 //  WhetherTests.swift\cf4 \
+\cf2 //  WhetherTests\cf4 \
+\cf2 //\cf4 \
+\cf2 //  Created by Ben Davis on 11/1/24.\cf4 \
+\cf2 //\cf4 \
+\
+\cf5 import\cf4  XCTest\
+\cf5 import\cf4  CoreLocation\
+\
+\cf5 final\cf4  \cf5 class\cf4  \cf6 WhetherTests\cf4 : \cf7 XCTestCase\cf4  \{\
+    \
+    \cf5 let\cf4  \cf8 manager\cf4 : \cf9 WeatherManager\cf4 !\
+    \cf5 private\cf4  \cf5 let\cf4  \cf8 apiKey\cf4  = \cf10 "02c210e0ad431e1510f2ebacd7e4e918"\cf4 \
+\
+    \cf5 override\cf4  \cf5 func\cf4  \cf8 setUpWithError\cf4 () \cf5 throws\cf4  \{\
+        \cf2 // Put setup code here. This method is called before the invocation of each test method in the class.\cf4 \
+        \cf11 manager\cf4  = \cf9 WeatherManager\cf4 (\cf12 settings\cf4 : \cf7 Settings\cf4 ())\
+    \}\
+\
+    \cf5 override\cf4  \cf5 func\cf4  \cf8 tearDownWithError\cf4 () \cf5 throws\cf4  \{\
+        \cf2 // Put teardown code here. This method is called after the invocation of each test method in the class.\cf4 \
+    \}\
+\
+    \cf5 func\cf4  \cf8 testExample\cf4 () \cf5 async\cf4  \cf5 throws\cf4  \{\
+        \cf2 // 40.72149\'b0 N, 74.00016\'b0 W\cf4 \
+        \cf5 let\cf4  location = \cf7 CLLocation\cf4 (\cf13 latitude\cf4 : \cf14 40.72149\cf4 , \cf13 longitude\cf4 : \cf14 74.00016\cf4 )\
+        \
+        \cf5 if\cf4  \cf5 let\cf4  weather = \cf15 NetworkConnection\cf4 ().\cf12 retrieveData\cf4 (\cf12 location\cf4 : location, \cf12 key\cf4 : \cf11 apiKey\cf4 ) \{\
+            \cf13 XCTAssertNotNil\cf4 (weather, \cf10 "Weather != nil"\cf4 )\
+        \}\
+        \
+        \cf2 // This is an example of a functional test case.\cf4 \
+        \cf2 // Use XCTAssert and related functions to verify your tests produce the correct results.\cf4 \
+        \cf2 // Any test you write for XCTest can be annotated as throws and async.\cf4 \
+        \cf2 // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.\cf4 \
+        \cf2 // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.\cf4 \
+    \}\
+\
+    \cf5 func\cf4  \cf8 testPerformanceExample\cf4 () \cf5 throws\cf4  \{\
+        \cf2 // This is an example of a performance test case.\cf4 \
+        \cf13 measure\cf4  \{\
+            \cf2 // Put the code you want to measure the time of here.\cf4 \
+        \}\
+    \}\
+\
+\}\
+}

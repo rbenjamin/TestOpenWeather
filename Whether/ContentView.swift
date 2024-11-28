@@ -7,341 +7,278 @@
 
 import SwiftUI
 import SwiftData
-import Combine
-import CoreLocation
-
-
-class WeatherManager: NSObject, ObservableObject {
-    let settings: Settings
-    var locationSink: AnyCancellable?
-    var coordinateSink: AnyCancellable?
-    private let apiKey = "02c210e0ad431e1510f2ebacd7e4e918"
-
-    let connection = NetworkConnection()
-    
-    @Published var currentWeather: CurrentWeather?
-    
-    @Published var coordinatesLastUpdated: Date?
-    @Published var geocoderLastUpdated: Date?
-    
-    @Published var wind: CurrentWeather.Wind?
-    
-    @Published var meshColors: [Color] = [
-        .red, .red, .red,
-        .red, .orange, .red,
-        .red, .red, .red
-    ]
-    
-    @Published var backgroundColor: Color = .red
-    
-    init(settings: Settings) {
-        self.settings = settings
-        super.init()
-        
-        
-        
-        Task { @MainActor in
-            
-            coordinateSink = self.settings.$coordinates.sink { [weak self] location in
-                guard let `self` = self else { return }
-                if let location {
-                    Task.detached {
-                        do {
-                            
-                            self.locationSink?.cancel()
-                            
-                            self.locationSink = try self.connection.retrieve(location: location, key: self.apiKey)
-                                .sink(receiveCompletion: { failure in
-                                print("failure: \(failure)")
-                            }, receiveValue: { weather in
-                                Task { @MainActor in
-                                        self.currentWeather = weather
-                                        self.wind = weather.wind
-                                    let modifier = CurrentWeather.ConditionModifier(temperature: weather.mainWeather.feelsLike.value)
-                                    print(modifier.localizedString)
-                                        self.meshColors = weather.meshColors
-                                    self.backgroundColor = weather.meshBackgroundColor
-                                    print(weather)
-                                }
-                            })
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    func geocodeLocation(_ location: CLLocation) async throws {
-        do {
-            let placemarks = try await CLGeocoder().reverseGeocodeLocation(location, preferredLocale: .autoupdatingCurrent)
-            
-            if let first = placemarks.first?.locality {
-                print("reversed geocode results: \(first)")
-                Task { @MainActor in
-                    self.settings.locationName = first
-                }
-            }
-        }
-        catch {
-#if DEBUG
-            fatalError("Failed to reverse geocode \(location.description): \(error)")
-#else
-            throw error
-#endif
-        }
-    }
-    
-    
-}
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    let settings: Settings
-    let locationManager: LocationManager
-    @StateObject var weatherManager: WeatherManager
-    
-    @State private var description: String?
-    @State private var mainLabel: String?
-    @State private var locality: String = "Unknown Location"
-    @State private var temperatureLabel: String?
-    @State private var feelsLike: String?
-    @State private var minTemp: String?
-    @State private var maxTemp: String?
-    @State private var humidity: String?
-    @State private var windDirection: String?
-    @State private var windSpeed: String?
-    @State private var rain: CurrentWeather.Rain?
-    @State private var snow: CurrentWeather.Snow?
-    @State private var conditions: CurrentWeather.WeatherConditions?
 
+    private struct ToolbarRotateKeyframe {
+        var rotationAngle = Angle.zero
+    }
+
+    @Environment(\.modelContext) private var modelContext
+
+    let settings = Settings.shared
+
+    @StateObject var weatherManager: WeatherManager
+    @StateObject var locationManager: LocationManager
+
+    @State private var locality: String = "Unknown Location"
+    @State private var currentWeather: CurrentWeather?
+    @State private var presentList: Bool = false
+    @State private var isDaytime: Bool = false
+    @State private var showReloadNameView: Bool = false
+    @State private var networkingState: Bool = false
+    @State private var shouldReloadWeather: Bool = false
+    @State private var showDownloadErrorView: Bool = false
+    @State private var showDataErrorView: Bool = false
+    @State private var visibleLocation: WeatherLocation?
+    @State private var backgroundColor: Color = Color("ClearSkyNormalDay")
+    @State private var gpsButtonTapped: Bool = false
+    @State private var reloadButtonTapped: Bool = false
+
+    @Query(sort: [SortDescriptor(\WeatherLocation.lastUpdated)], animation: .easeIn) var locations: [WeatherLocation]
+
+    @Query(FetchDescriptor<WeatherLocation>(predicate: #Predicate<WeatherLocation> {
+        $0.gpsLocation == false
+    }, sortBy: [SortDescriptor(\WeatherLocation.lastUpdated)])) var listLocations: [WeatherLocation]
 
     init() {
-        let settings = Settings()
-        self.settings = settings
-        self.locationManager = LocationManager(settings: settings)
-        _weatherManager = StateObject(wrappedValue: WeatherManager(settings: settings))
-    }
-    
-    @Query private var items: [Item]
-    
-    @ViewBuilder
-    var backgroundGradient: some View {
+        let manager = LocationManager()
+        _locationManager = StateObject(wrappedValue: manager)
 
+        let weatherManager = WeatherManager(locationManager: manager)
+        _weatherManager = StateObject(wrappedValue: weatherManager)
+    }
+
+    @ViewBuilder
+    var backgroundView: some View {
         ZStack {
-//            Color.black
-            self.weatherManager.backgroundColor
-                .edgesIgnoringSafeArea(.bottom)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .overlay {
-                    VStack(spacing: 0) {
-                        Spacer()
-                        MeshGradient(width: 3, height: 3, points: [
-                            [0, 0], [0.5, 0], [1, 0],
-                            [0, 0.5], [0.5, 0.50], [1, 0.5],
-                            [0, 1], [0.5, 1], [1, 1]
-                        ], colors: self.weatherManager.meshColors)
-                        .frame(maxHeight: 400.0)
-                        Spacer()
-                    }.frame(maxWidth: .infinity, alignment: .center)
-                }
-            
-//            SnowEffect(snow: CurrentWeather.Snow(oneHour: 1), wind: CurrentWeather.Wind(windSpeed: Measurement<UnitSpeed>(value: 8, unit: UnitSpeed.metersPerSecond), direction: 125.0, gustLevel: 0.0), speed: CurrentWeather.Wind.WindSpeedCategory.extreme)
-            
+            Color.white
+            Group {
+                self.backgroundColor
+                    .edgesIgnoringSafeArea(.bottom)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .transition(.opacity)
+            }
+            .opacity(0.75)
         }
-        
-        
+    }
+
+    @ToolbarContentBuilder
+    var toolbarContent: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarLeading) {
+
+                Button {
+                    self.gpsButtonTapped.toggle()
+                    print("GPS Location Tapped!")
+                    self.weatherManager.currentWeatherLocation = self.weatherManager.gpsWeatherLocation
+                    self.weatherManager.updateGPSLocation()
+                } label: {
+                    Image(systemName: "location")
+                        .keyframeAnimator(initialValue: ToolbarRotateKeyframe(),
+                                          trigger: self.gpsButtonTapped)
+                    { image, value in
+                            image.rotationEffect(value.rotationAngle)
+                    } keyframes: { _ in
+                            KeyframeTrack(\.rotationAngle) {
+                                CubicKeyframe(Angle(degrees: 355), duration: 0.45)
+                                CubicKeyframe(Angle(degrees: 0), duration: 0.15)
+
+                            }
+                        }
+                }
+                .buttonStyle(.borderless)
+                .disabled(self.settings.locationEnabled == false ||  self.weatherManager.gpsButtonDisabled == true)
+                .accessibilityLabel("Refresh Current Location")
+            Circle()
+                .fill(Color.green)
+                .stroke(Color.white)
+                .frame(width: 12, height: 12)
+                .scaleEffect(self.networkingState ? CGSize(width: 1, height: 1) : CGSize(width: 0, height: 0),
+                             anchor: .center)
+
+        }
+
+        ToolbarItem(placement: .topBarTrailing) {
+            Button(action: reload) {
+                Image(systemName: "arrow.clockwise")
+                    .keyframeAnimator(initialValue: ToolbarRotateKeyframe(),
+                                      trigger: self.shouldReloadWeather) { image, value in
+                        image.rotationEffect(value.rotationAngle)
+                    } keyframes: { _ in
+                        KeyframeTrack(\.rotationAngle) {
+                            CubicKeyframe(Angle(degrees: 355), duration: 0.45)
+                            CubicKeyframe(Angle(degrees: 0), duration: 0.15)
+                        }
+                    }
+            }
+            .disabled(self.shouldReloadWeather == true)
+            .accessibilityLabel(Text("Reload"))
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                self.presentList.toggle()
+            } label: {
+                Label("All Locations", systemImage: "list.bullet")
+            }
+        }
+
+    }
+    private func updateVisibleLocation(oldValue: WeatherLocation?, newValue: WeatherLocation?) {
+        if let newValue, newValue != oldValue {
+            withAnimation {
+                self.visibleLocation = newValue
+            }
+        }
+
+    }
+
+    @ViewBuilder
+    func scrollContent(proxy: ScrollViewProxy) -> some View {
+        LazyHStack(alignment: .center, spacing: 0) {
+            ForEach(0 ..< self.locations.count, id: \.self) { idx in
+                LocationCard(locations: self.locations,
+                                 index: idx,
+                                 currentWeather: self.$currentWeather,
+                                 currentLocation: self.$visibleLocation,
+                                 isDaytime: self.$isDaytime,
+                                 backgroundColor: self.$backgroundColor,
+                                 apiKey: self.weatherManager.apiKey,
+                                 downloadManager: self.weatherManager.downloadManager,
+                                 decoder: self.weatherManager.decoder,
+                                 percentFormatter: self.weatherManager.percentFormatter,
+                                 pressureFormatter: self.weatherManager.pressureFormatter,
+                                 shouldReload: self.$shouldReloadWeather,
+                                 error: self.$weatherManager.error,
+                                 scrollTo: { weatherLocation in
+
+                    if let weatherLocation {
+                        withAnimation {
+                            self.visibleLocation = weatherLocation
+
+                            proxy.scrollTo(weatherLocation, anchor: .center)
+                        }
+
+                    }
+                })
+                .environment(\.modelContext, self.modelContext)
+                .safeAreaPadding([.leading, .trailing], 4)
+                .containerRelativeFrame(.horizontal, count: 1, spacing: 0)
+                .frame(maxHeight: .infinity)
+                .id(locations[idx])
+            }
+        }
     }
 
     var body: some View {
-        NavigationSplitView {
-            ScrollView([.vertical]) {
-                VStack(spacing: 12) {
-                    VStack {
-                        
-                        GroupBox {
-                            LabeledContent("Location:", value: self.settings.locationName ?? "Unknown Location")
-                            
-                            HStack {
-                                VStack {
-                                    LodableLabel(value: self.$mainLabel, label: "Current Conditions:")
-                                    
-                                    LodableText(self.$description)
-                                        .font(.caption)
-                                        .foregroundStyle(Color.secondary)
-                                        .frame(maxWidth: .infinity, alignment: .trailing)
-                                        .offset(x: 4, y: -4)
-                                        
-                                }
-                                if let conditions {
-                                    AsyncImage(url: conditions.iconURL) { image in
-                                        image
-                                            .resizable()
-                                            .frame(width: 22, height: 22)
-                                    } placeholder: {
-                                        ProgressView()
-                                    }
-                                    
-                                }
-                            }
+        NavigationStack {
+
+            ScrollViewReader(content: { proxy in
+                ScrollView([.horizontal]) {
+                    self.scrollContent(proxy: proxy)
+                        .scrollTargetLayout()
+
+                    .onChange(of: self.visibleLocation, { old, new in
+                        if old != new, let new {
+                            self.locality = new.locationName ?? "Unknown Location"
+                            self.settings.setDefaultLocationID(new.persistentModelID,
+                                                               encoder: self.weatherManager.encoder)
+                        } else if new == nil {
+                            self.locality = "Unknown Location"
                         }
-                        .groupBoxStyle(TransparentGroupBox())
-
-                        
-                        GroupBox {
-                            LodableLabel(value: self.$temperatureLabel, label: "Temperature:")
-                            
-                            LodableLabel(value: self.$feelsLike, label: "Feels Like:")
-
-                            if let minTemp, let maxTemp, minTemp != maxTemp {
-                                
-                                
-                                HStack {
-                                    VStack {
-                                        Text("Min:")
-                                        Text(minTemp)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    Spacer()
-                                    VStack {
-                                        Text("Max:")
-                                        Text(maxTemp)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .font(.system(.caption))
-                            }
-                            
-                            LodableLabel(value: self.$humidity, label: "Humidity:")
-
+                    })
+                    .onChange(of: self.weatherManager.currentWeatherLocation, { old, new in
+                        if old != new, let new {
+                            self.visibleLocation = new
+                            proxy.scrollTo(new)
                         }
-                        .groupBoxStyle(TransparentGroupBox())
-
-                        
-                        GroupBox("Wind") {
-                            VStack {
-                                LodableLabel(value: self.$windSpeed, label: "Wind Speed:")
-
-                                HStack(alignment: .center) {
-                                    
-                                    LodableLabel(value: self.$windDirection, label: "Wind Direction:")
-                                    CardinalView(wind: self.$weatherManager.wind)
-                                        .frame(width: 40, height: 40, alignment: .center)
-
-                                    
-                                }
-                            }
-
-                        }
-                        .groupBoxStyle(TransparentGroupBox())
-
-                        if let rain {
-                            RainView(rain: rain)
-                        }
-                        
-                        if let snow {
-                            SnowView(snow: snow)
-                        }
-                        
-    //                        Text("Humidity: \(humidity)%")
-                       
-                    }
+                    })
                 }
-                .padding()
-                
-                
-            }
-            .background {
-                self.backgroundGradient
+                .background {
+                    self.backgroundColor
+                }
+                .scrollTargetBehavior(.paging)
+                .scrollPosition(id: self.$visibleLocation, anchor: .center)
+            })
+            .frame(maxHeight: .infinity)
+            .ignoresSafeArea()
 
-            }
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: reload) {
-                        Label("Reload", systemImage: "arrow.clockwise")
-                    }
-                }
+                self.toolbarContent
             }
-            .onChange(of: self.weatherManager.currentWeather) { _, newValue in
-                if let newValue {
-                    if let conditions = newValue.conditions.first {
-                        print("condition code: \(conditions.id)")
-                        
-                        self.conditions = conditions
-                        self.mainLabel = conditions.mainLabel
-                        self.description = conditions.description
-                    }
-                    self.temperatureLabel = newValue.mainWeather.temperature.formatted()
-                    self.feelsLike = newValue.mainWeather.feelsLike.formatted()
-                    self.minTemp = newValue.mainWeather.minTemp.formatted()
-                    self.maxTemp = newValue.mainWeather.maxTemp.formatted()
-                    self.humidity = Int(newValue.mainWeather.humidity).formatted()
-                    self.windDirection = newValue.wind?.cardinalDirection.stringLabel
-                    self.windSpeed = newValue.wind?.windSpeed.formatted()
-                    self.rain = newValue.rain
-                    self.snow = newValue.snow
-                    
-                    if let degrees = newValue.wind?.cardinalDirection.normalizedDegrees() {
-                        print("cardinal direction: \(degrees) direction:  \(CurrentWeather.Wind.WindDirection.windDirectionForDegrees(degrees))")
-                    }
-                }
-            }
-            .onChange(of: self.settings.locationName) { _, newValue in
-                if let newValue {
-                    self.locality = newValue
-                }
-                else {
-                    self.locality = "Unknown Location"
-                }
-            }
-            .onChange(of: self.settings.coordinates) { _, newValue in
-                if let newValue {
-                    Task.detached {
-                        do {
-                            try await self.weatherManager.geocodeLocation(newValue)
-                        }
-                        catch {
-#if DEBUG
-                            fatalError("Failed to geocode")
-#else
-                            #error("Need to handle these errors!")
-#endif
-                        }
-                    }
-                }
-            }
-        } detail: {
-            Text("Select an item")
+            .navigationTitle(self.$locality)
+            .toolbarColorScheme(self.isDaytime ? .light : .dark, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(self.backgroundColor, for: .navigationBar)
+            .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $presentList,
+                   content: {
+                LocationsList(dismiss: self.$presentList, manager: self.weatherManager)
+                    .environment(\.modelContext, self.modelContext)
+            })
         }
         .onAppear {
-            self.locationManager.updateCurrentLocation()
-            self.locality = settings.locationName ?? "Unknown Location"
+            self.weatherManager.mainContext = self.modelContext
+            self.weatherManager.beginUpdatingWeather()
         }
-    }
-    private func reload() {
-        self.locationManager.updateCurrentLocation()
-    }
+        .onChange(of: self.locality, { oldValue, newValue in
+            if oldValue != newValue {
+                self.visibleLocation?.locationName = newValue
+            }
+        })
+        .onReceive(NotificationCenter.default.publisher(for: .networkingOn), perform: { _ in
+            Task { @MainActor in
+                withAnimation(.easeIn(duration: 0.25)) {
+                    self.networkingState = true
+                }
+            }
+        })
+        .onReceive(NotificationCenter.default.publisher(for: .networkingOff), perform: { _ in
+            // Delay turning the notification icon off for 1 second to ensure visiblity of the icon before networking finishes.
+            Timer.scheduledTimer(withTimeInterval:  1, repeats: false) { _ in
+                Task { @MainActor in
+                    withAnimation(.easeIn(duration: 0.25)) {                        self.networkingState = false
+                    }
+                }
+            }
+        })
+        .onReceive(NotificationCenter.default.publisher(for: .downloadError), perform: { _ in
+            self.showDownloadErrorView.toggle()
+        })
+        .onReceive(NotificationCenter.default.publisher(for: .databaseError), perform: { _ in
+            self.showDataErrorView.toggle()
+        })
+        .alert(isPresented: self.$showDownloadErrorView, error: self.weatherManager.downloadError, actions: {
+            Button("OK") {
+                self.showDownloadErrorView.toggle()
+            }
+        })
+        .alert(isPresented: self.$showDataErrorView, error: self.weatherManager.databaseError, actions: {
+            Button("OK") {
+                self.showDataErrorView.toggle()
+            }
+        })
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
+        .onChange(of: self.locationManager.error) { _, newValue in
+            /// Encountered an error determining user location
+            if newValue != nil {
+                /// Attempt to load the most recently downloaded weather data:
 
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+#if !DEBUG
+                #warning("NEed to handle errors!")
+#endif
             }
         }
     }
+
+    private func reload() {
+        self.shouldReloadWeather.toggle()
+//        self.weatherManager.beginUpdatingWeather(userReload: true)
+    }
+
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: WeatherLocation.self, inMemory: true)
 }
+ 

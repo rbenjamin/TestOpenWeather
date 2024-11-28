@@ -7,22 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B539BB5B2CD94FEB0028DEFD /* SwiftData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B539BB5A2CD94FEB0028DEFD /* SwiftData.framework */; };
 		B57665D22CC9560A00D3659A /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B57665D12CC9560A00D3659A /* CoreLocation.framework */; };
-		B588C2092CCADDD400B7D085 /* Vortex in Frameworks */ = {isa = PBXBuildFile; productRef = B588C2082CCADDD400B7D085 /* Vortex */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		B55DFFAB2CD57479006F252F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B576659C2CC85BCC00D3659A /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B57665A32CC85BCC00D3659A;
-			remoteInfo = Whether;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
-		B55DFFA72CD57479006F252F /* WhetherTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhetherTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B539BB5A2CD94FEB0028DEFD /* SwiftData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftData.framework; path = System/Library/Frameworks/SwiftData.framework; sourceTree = SDKROOT; };
 		B57665A42CC85BCC00D3659A /* Whether.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Whether.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B57665D12CC9560A00D3659A /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -32,17 +22,13 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				"Location Search & Management/UILocationsList.swift",
 			);
 			target = B57665A32CC85BCC00D3659A /* Whether */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		B55DFFA82CD57479006F252F /* WhetherTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = WhetherTests;
-			sourceTree = "<group>";
-		};
 		B57665A62CC85BCC00D3659A /* Whether */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -54,19 +40,12 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		B55DFFA42CD57479006F252F /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		B57665A12CC85BCC00D3659A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B588C2092CCADDD400B7D085 /* Vortex in Frameworks */,
 				B57665D22CC9560A00D3659A /* CoreLocation.framework in Frameworks */,
+				B539BB5B2CD94FEB0028DEFD /* SwiftData.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,7 +56,6 @@
 			isa = PBXGroup;
 			children = (
 				B57665A62CC85BCC00D3659A /* Whether */,
-				B55DFFA82CD57479006F252F /* WhetherTests */,
 				B57665D02CC9560900D3659A /* Frameworks */,
 				B57665A52CC85BCC00D3659A /* Products */,
 			);
@@ -87,7 +65,6 @@
 			isa = PBXGroup;
 			children = (
 				B57665A42CC85BCC00D3659A /* Whether.app */,
-				B55DFFA72CD57479006F252F /* WhetherTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,6 +72,7 @@
 		B57665D02CC9560900D3659A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				B539BB5A2CD94FEB0028DEFD /* SwiftData.framework */,
 				B57665D12CC9560A00D3659A /* CoreLocation.framework */,
 			);
 			name = Frameworks;
@@ -103,29 +81,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		B55DFFA62CD57479006F252F /* WhetherTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = B55DFFAD2CD57479006F252F /* Build configuration list for PBXNativeTarget "WhetherTests" */;
-			buildPhases = (
-				B55DFFA32CD57479006F252F /* Sources */,
-				B55DFFA42CD57479006F252F /* Frameworks */,
-				B55DFFA52CD57479006F252F /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				B55DFFAC2CD57479006F252F /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				B55DFFA82CD57479006F252F /* WhetherTests */,
-			);
-			name = WhetherTests;
-			packageProductDependencies = (
-			);
-			productName = WhetherTests;
-			productReference = B55DFFA72CD57479006F252F /* WhetherTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 		B57665A32CC85BCC00D3659A /* Whether */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B57665B52CC85BCE00D3659A /* Build configuration list for PBXNativeTarget "Whether" */;
@@ -137,13 +92,13 @@
 			buildRules = (
 			);
 			dependencies = (
+				B5C73B562CF8D53F00D3E5D8 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				B57665A62CC85BCC00D3659A /* Whether */,
 			);
 			name = Whether;
 			packageProductDependencies = (
-				B588C2082CCADDD400B7D085 /* Vortex */,
 			);
 			productName = Whether;
 			productReference = B57665A42CC85BCC00D3659A /* Whether.app */;
@@ -159,10 +114,6 @@
 				LastSwiftUpdateCheck = 1610;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
-					B55DFFA62CD57479006F252F = {
-						CreatedOnToolsVersion = 16.1;
-						TestTargetID = B57665A32CC85BCC00D3659A;
-					};
 					B57665A32CC85BCC00D3659A = {
 						CreatedOnToolsVersion = 16.0;
 					};
@@ -178,7 +129,7 @@
 			mainGroup = B576659B2CC85BCC00D3659A;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				B588C2072CCADDD400B7D085 /* XCRemoteSwiftPackageReference "Vortex" */,
+				B5915E472CF8C43E007ECA1A /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B57665A52CC85BCC00D3659A /* Products */;
@@ -186,19 +137,11 @@
 			projectRoot = "";
 			targets = (
 				B57665A32CC85BCC00D3659A /* Whether */,
-				B55DFFA62CD57479006F252F /* WhetherTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		B55DFFA52CD57479006F252F /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		B57665A22CC85BCC00D3659A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -209,13 +152,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		B55DFFA32CD57479006F252F /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		B57665A02CC85BCC00D3659A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -226,52 +162,13 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		B55DFFAC2CD57479006F252F /* PBXTargetDependency */ = {
+		B5C73B562CF8D53F00D3E5D8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = B57665A32CC85BCC00D3659A /* Whether */;
-			targetProxy = B55DFFAB2CD57479006F252F /* PBXContainerItemProxy */;
+			productRef = B5C73B552CF8D53F00D3E5D8 /* SwiftLintBuildToolPlugin */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		B55DFFAE2CD57479006F252F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 54YTE3BLBX;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.pinwheeldevinc.WhetherTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Whether.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Whether";
-			};
-			name = Debug;
-		};
-		B55DFFAF2CD57479006F252F /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 54YTE3BLBX;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.pinwheeldevinc.WhetherTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Whether.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Whether";
-			};
-			name = Release;
-		};
 		B57665B62CC85BCE00D3659A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -462,15 +359,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		B55DFFAD2CD57479006F252F /* Build configuration list for PBXNativeTarget "WhetherTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B55DFFAE2CD57479006F252F /* Debug */,
-				B55DFFAF2CD57479006F252F /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		B576659F2CC85BCC00D3659A /* Build configuration list for PBXProject "Whether" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -492,21 +380,21 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		B588C2072CCADDD400B7D085 /* XCRemoteSwiftPackageReference "Vortex" */ = {
+		B5915E472CF8C43E007ECA1A /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/twostraws/Vortex";
+			repositoryURL = "https://github.com/SimplyDanny/SwiftLintPlugins";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.1;
+				minimumVersion = 0.57.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		B588C2082CCADDD400B7D085 /* Vortex */ = {
+		B5C73B552CF8D53F00D3E5D8 /* SwiftLintBuildToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = B588C2072CCADDD400B7D085 /* XCRemoteSwiftPackageReference "Vortex" */;
-			productName = Vortex;
+			package = B5915E472CF8C43E007ECA1A /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
+			productName = "plugin:SwiftLintBuildToolPlugin";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

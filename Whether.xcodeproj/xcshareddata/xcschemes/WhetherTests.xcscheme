@@ -19,7 +19,7 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "B55DFF972CD56F11006F252F"
+               BlueprintIdentifier = "B507EF432CD5765D009E20DD"
                BuildableName = "WhetherTests.xctest"
                BlueprintName = "WhetherTests"
                ReferencedContainer = "container:Whether.xcodeproj">
