@@ -38,7 +38,9 @@ struct LodableLabel<Value: StringProtocol>: View {
         self.font = Self.font(forStyle: fontStyle, fontSize: fontSize, fontWeight: fontWeight)
     }
 
-    private static func font(forStyle fontStyle: Font.TextStyle?, fontSize: CGFloat?, fontWeight: Font.Weight?) -> Font {
+    private static func font(forStyle fontStyle: Font.TextStyle?,
+                             fontSize: CGFloat?,
+                             fontWeight: Font.Weight?) -> Font {
         if fontSize == nil, let fontStyle {
 
             if let fontWeight {

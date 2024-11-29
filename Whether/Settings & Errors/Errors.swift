@@ -45,6 +45,7 @@ public enum DatabaseError: Error, LocalizedError {
 }
 
 enum DownloadError: Error, LocalizedError {
+    case emptyAPIKey
     case locationIsNil(location: WeatherLocation)
     case resolveFailed(type: WeatherDataType, location: WeatherLocation, error: Error)
     case downloadFailed(type: WeatherDataType, location: WeatherLocation, error: Error)
@@ -55,6 +56,8 @@ enum DownloadError: Error, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
+        case .emptyAPIKey:
+            return "API Key is empty. Add an OpenWeather API Key to use."
         case .locationIsNil(let location):
             return "WeatherLocation \(location.locationName ?? "Unknown name") location (\(location.location?.description ?? "N/A")) is nil. Cannot load location without coordinates."
         case .resolveFailed(let type, let location, let error):
@@ -80,11 +83,14 @@ enum DownloadError: Error, LocalizedError {
         case .geocodeFailed: return "303"
         case .decodeFailed: return "304"
         case .mimeTypeFailure: return "305"
+        case .emptyAPIKey: return "306"
         }
     }
 
     public var recoverySuggestion: String? {
         switch self {
+        case .emptyAPIKey:
+            return "Add API Key to Project."
         case .locationIsNil:
             return "Try deleting and recreating this location."
         default:

@@ -18,6 +18,12 @@ struct LocationSearchView: View {
             self.placemark = placemark
         }
     }
+
+    let backgroundColor: Color
+    let isDaytime: Bool
+    let listRowBackground: Color
+    let foregroundStyle: Color
+
     @ObservedObject var weatherManager: WeatherManager
     @Binding var locationName: String
     @Binding var pickedPlacemark: CLPlacemark?
@@ -28,11 +34,18 @@ struct LocationSearchView: View {
     init(weatherManager: WeatherManager,
          locationName: Binding<String>,
          pickedPlacemark: Binding<CLPlacemark?>,
-         dismiss: Binding<Bool>) {
+         dismiss: Binding<Bool>,
+         backgroundColor: Color,
+         isDaytime: Bool) {
         self.weatherManager = weatherManager
         _locationName = locationName
         _pickedPlacemark = pickedPlacemark
         _dismiss = dismiss
+        self.backgroundColor = backgroundColor
+        self.isDaytime = isDaytime
+        self.listRowBackground = isDaytime ? Color.white.opacity(0.50) : Color.black.opacity(0.50)
+        self.foregroundStyle = isDaytime ? Color.dayTextColor : Color.nightTextColor
+
     }
 
     func geocodeLocation(fromString: String) async -> [CLPlacemark] {
@@ -63,18 +76,19 @@ struct LocationSearchView: View {
                     .onSubmit(self.submit)
                     .focused($focused)
                     .textFieldStyle(.plain)
-
+                    .foregroundStyle(self.foregroundStyle)
                 Button {
                     self.submit()
                 } label: {
                     Text(Image(systemName: "location.magnifyingglass"))
+                        .foregroundStyle(self.foregroundStyle)
                         .disabled(self.locationName.isEmpty)
                 }
             }
             .padding([.leading, .trailing], 16)
             .padding([.top, .bottom], 8)
             .background {
-                Capsule().foregroundStyle(Color.white)
+                Capsule().foregroundStyle(self.listRowBackground)
             }
             .padding([.leading, .trailing], 4)
             .padding(.top, 8)
@@ -84,6 +98,8 @@ struct LocationSearchView: View {
             List {
                 if self.placemarks.isEmpty {
                     Text("No Matched Locations.")
+                        .listRowBackground(self.listRowBackground)
+                        .foregroundStyle(self.foregroundStyle)
                 }
                 ForEach(self.placemarks, id: \.id) { placemark in
                     let location = placemark.placemark
@@ -102,22 +118,25 @@ struct LocationSearchView: View {
                         }
                     }
                 }
+                .listRowBackground(self.listRowBackground)
+                .foregroundStyle(self.foregroundStyle)
             }
             .listStyle(.grouped)
-//            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-        }
-        .background {
-            Color.systemGroupedBackground
+            .scrollContentBackground(.hidden)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(self.backgroundColor, for: .navigationBar)
         .navigationTitle(Text("Search for Location"))
+        .toolbarColorScheme(self.isDaytime ? .light : .dark, for: .navigationBar)
+        .background(self.backgroundColor)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     self.dismiss.toggle()
                 } label: {
                     Text("Cancel")
+                        .foregroundStyle(self.foregroundStyle)
                 }
             }
         }
@@ -131,5 +150,7 @@ struct LocationSearchView: View {
     LocationSearchView(weatherManager: WeatherManager(locationManager: LocationManager()),
                        locationName: .constant(""),
                        pickedPlacemark: .constant(nil),
-                       dismiss: .constant(false))
+                       dismiss: .constant(false),
+                       backgroundColor: .white,
+                       isDaytime: true)
 }

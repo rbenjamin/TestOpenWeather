@@ -1,0 +1,9 @@
+# implicitly
+line_length:
+    warning: 120
+    ignores_comments: true
+    ignores_interpolated_strings: true
+    ignores_urls: true
+    
+cyclomatic_complexity:
+  ignores_case_statements: true

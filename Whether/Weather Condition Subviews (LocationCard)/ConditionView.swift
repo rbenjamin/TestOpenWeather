@@ -37,7 +37,7 @@ struct ConditionView: View {
     }
 
     var textColor: Color {
-        return self.isDaytime ? Color.secondary : Color("NightTextColor")
+        return self.isDaytime ? Color.dayTextColor : Color.nightTextColor
     }
 
     var body: some View {

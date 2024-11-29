@@ -44,7 +44,7 @@ struct ParticleSceneKitView: UIViewControllerRepresentable {
         case .rain(let mist):
             if mist {
                 self.images = [UIImage(named: "Mist")!]
-                self.scale = 1
+                self.scale = 0.75
                 self.tintColor = .white
             } else {
                 self.images = [UIImage(named: "Raindrop")!, UIImage(named: "Raindrop2")!]
@@ -107,7 +107,7 @@ struct ParticleSettings {
             return ParticleSettings(direction: direction!, amount: amount, effect: effect)
         } else if let conditions, conditions.atmosphereConditions == .mist {
             let effect = WeatherEffect.rain(mist: true)
-            let amount = WeatherEffectAmount.light
+            let amount = WeatherEffectAmount.regular
             var direction: WeatherEffectDirection?
 
             if let wind {
@@ -324,8 +324,42 @@ class ParticleSceneKitViewController: UIViewController {
             return 0
         }
         default:
+            if case WeatherEffectDirection.leftToRight = direction {
+                return 30
+            }
             return 68.7
         }
+    }
+
+    private func accelerationAndEmitterPosition(effect: WeatherEffect,
+                                                direction: WeatherEffectDirection) -> (SCNVector3, SCNMatrix4) {
+        var emitterPosition: SCNMatrix4!
+        var acceleration: SCNVector3!
+        switch direction {
+        case .straightDown:
+            if case .rain(let useMist) = effect {
+                acceleration = useMist ? SCNVector3(0.0, -0.5, 0) : SCNVector3(0.0, -2, 0)
+            } else {
+                acceleration = SCNVector3(0.0, -2, 0)
+            }
+            emitterPosition = SCNMatrix4MakeTranslation(0, 7, 0)
+        case .angleRight:
+            acceleration = SCNVector3(0.25, -2, 0)
+            emitterPosition = SCNMatrix4MakeTranslation(-1, 7, 0)
+        case .angleRightHard:
+            acceleration = SCNVector3(0.5, -2, 0)
+            emitterPosition = SCNMatrix4MakeTranslation(-2.5, 7, 0)
+        case .angleLeft:
+            acceleration = SCNVector3(-0.25, -2, 0)
+            emitterPosition = SCNMatrix4MakeTranslation(1, 7, 0)
+        case .angleLeftHard:
+            acceleration = SCNVector3(-0.5, -2, 0)
+            emitterPosition = SCNMatrix4MakeTranslation(2.5, 7, 0)
+        case .leftToRight:
+            acceleration = SCNVector3(0.50, 0, 0)
+            emitterPosition = SCNMatrix4MakeTranslation(-8, 4, 0)
+        }
+        return (acceleration, emitterPosition)
     }
 
     private func weatherEffect(effect: WeatherEffect,
@@ -341,7 +375,6 @@ class ParticleSceneKitViewController: UIViewController {
         particleSystem.birthRate = birthRate
         particleSystem.birthLocation = .volume
         particleSystem.isLocal = false  // Emit in world space
-        particleSystem.warmupDuration = 1.0
         // Create wide, thin emitter shape to cover screen width
         let emitterWidth: CGFloat = 10  // Adjust based on your needs
         particleSystem.emitterShape = SCNBox(width: emitterWidth,
@@ -359,15 +392,21 @@ class ParticleSceneKitViewController: UIViewController {
         particleSystem.particleColor = self.tintColor ?? UIColor.white
         switch effect {
         case .rain(let mist):
-            particleSystem.spreadingAngle = 10
             if !mist {
                 particleSystem.particleLifeSpan = 7
                 particleSystem.stretchFactor = -0.25
+                particleSystem.warmupDuration = 2.0
             } else {
-                particleSystem.particleLifeSpan = 7
+                particleSystem.particleLifeSpan = 12
                 particleSystem.stretchFactor = 0
+                particleSystem.speedFactor = 0.4
+                // Need a faster warmup so mist appears quickly
+                // mist is slower than other effects, so faster
+                // warmup ensures the `mist` appears quickly.
+                particleSystem.warmupDuration = 13.0
             }
         default:
+            particleSystem.warmupDuration = 2.0
             particleSystem.spreadingAngle = 35
             particleSystem.particleLifeSpan = 7
             particleSystem.stretchFactor = 0
@@ -375,37 +414,8 @@ class ParticleSceneKitViewController: UIViewController {
 
         particleSystem.particleAngle = self.particleAngle(effect: effect, direction: direction)
         // Gravity effect
-        var emitterPosition: SCNMatrix4!
-
-        if direction == .straightDown {
-            if case .rain(let useMist) = effect {
-                if useMist {
-                    particleSystem.acceleration = SCNVector3(0.0, -0.3, 0)
-                } else {
-                    particleSystem.acceleration = SCNVector3(0.0, -2, 0)
-                }
-            } else {
-                particleSystem.acceleration = SCNVector3(0.0, -2, 0)
-            }
-            emitterPosition = SCNMatrix4MakeTranslation(0, 7, 0)
-        } else if direction == .angleRight {
-            particleSystem.acceleration = SCNVector3(0.25, -2, 0)
-            emitterPosition = SCNMatrix4MakeTranslation(-1, 7, 0)
-        } else if direction == .angleRightHard {
-            particleSystem.acceleration = SCNVector3(0.5, -2, 0)
-            emitterPosition = SCNMatrix4MakeTranslation(-2.5, 7, 0)
-        } else if direction == .angleLeft {
-            particleSystem.acceleration = SCNVector3(-0.25, -2, 0)
-            emitterPosition = SCNMatrix4MakeTranslation(1, 7, 0)
-
-        } else if direction == .angleLeftHard {
-            particleSystem.acceleration = SCNVector3(-0.5, -2, 0)
-            emitterPosition = SCNMatrix4MakeTranslation(2.5, 7, 0)
-        } else if direction == .leftToRight {
-            particleSystem.acceleration = SCNVector3(0.50, 0, 0)
-            emitterPosition = SCNMatrix4MakeTranslation(-8, 4, 0)
-            particleSystem.particleAngle = 30.0
-        }
+        let (acceleration, emitterPosition) = accelerationAndEmitterPosition(effect: effect, direction: direction)
+        particleSystem.acceleration = acceleration
         // Continuous emission
         particleSystem.loops = true
         // Rendering properties

@@ -21,7 +21,7 @@ struct ForecastRow: View {
         self.index = index
         self.isDaytime = isDaytime
         self.percentFormatter = percentFormatter
-        self.textColor = isDaytime ? Color.secondary : Color.nightTextColor
+        self.textColor = isDaytime ? Color.dayTextColor : Color.nightTextColor
     }
 
     func animate(_ forecast: Forecast.ForecastList) {
@@ -52,6 +52,7 @@ struct ForecastRow: View {
                                 .font(.system(.caption,
                                               design: .monospaced,
                                               weight: .regular))
+//                                .foregroundStyle(self.textColor)
                                 .transition(.scale)
                         } else {
                             ProgressView()
@@ -73,6 +74,7 @@ struct ForecastRow: View {
                                 .font(.system(.caption,
                                               design: .monospaced,
                                               weight: .bold))
+                                .foregroundStyle(self.textColor)
                                 .transition(.scale)
 
                         } else {

@@ -11,18 +11,18 @@ struct LocationCard: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.scenePhase) var scenePhase
 
-    let locations: [WeatherLocation]
-    let index: Int
-    let location: WeatherLocation
-    let isGPS: Bool
-    let apiKey: String
+    private let locations: [WeatherLocation]
+    private let index: Int
+    private let location: WeatherLocation
+    private let isGPS: Bool
+    private let apiKey: String
 //    let session: URLSession
-    let decoder: JSONDecoder
-    let date: Date
-    let locality: String
-    let percentFormatter: NumberFormatter
-    let pressureFormatter: MeasurementFormatter
-    let downloadManager: DownloadManager
+    private let decoder: JSONDecoder
+    private let date: Date
+    private let locality: String
+    private let percentFormatter: NumberFormatter
+    private let pressureFormatter: MeasurementFormatter
+    private let downloadManager: DownloadManager
 
     /// Ensures we don't begin downloading weather data until a location is visible.
     @Binding private var visibleWeather: CurrentWeather?
@@ -102,7 +102,7 @@ struct LocationCard: View {
     }
 
     var textColor: Color {
-        return self.isDaytime ? Color.secondary : Color("NightTextColor")
+        return self.isDaytime ? Color.dayTextColor : Color.nightTextColor
     }
 
     #if DEBUG
@@ -380,6 +380,8 @@ struct LocationCard: View {
             print("WeatherLocation \(location.locationName ?? "Unknown name") download failed: Decode failed for \(type) error: \(error)")
         case .mimeTypeFailure(let reason):
             print("WeatherLocation \(location.locationName ?? "Unknown name") mime type failure: \(reason)")
+        case .emptyAPIKey:
+            print("API key is empty!  Add an API key to OpenWeather+Key.")
         }
     }
 }

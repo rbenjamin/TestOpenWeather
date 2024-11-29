@@ -15,7 +15,7 @@ struct WindView: View {
     @State private var direction: String?
     let isDaytime: Bool
     var textColor: Color {
-        return self.isDaytime ? Color.secondary : Color.nightTextColor
+        return self.isDaytime ? Color.dayTextColor : Color.nightTextColor
     }
     var cardinalBackgroundColor: Color {
         return self.isDaytime ? Color("CardinalColorDay").opacity(0.75) : Color("CardinalColorNight").opacity(0.75)

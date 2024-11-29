@@ -101,6 +101,9 @@ extension Color {
     static var nightTextColor: Color {
         Color("NightTextColor")
     }
+    static var dayTextColor: Color {
+        Color("DayTextColor")
+    }
     static var systemGroupedBackground: Color {
         return Color(uiColor: UIColor.systemGroupedBackground)
     }

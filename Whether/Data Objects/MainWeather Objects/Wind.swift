@@ -35,7 +35,7 @@ extension CurrentWeather {
         }
 
         init(from decoder: any Decoder) throws {
-            let container: KeyedDecodingContainer<Wind.CodingKeys> = try decoder.container(keyedBy: Wind.CodingKeys.self)
+            let container: KeyedDecodingContainer<CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
             let doubleSpeed = try container.decode(Double.self,
                                                    forKey: Wind.CodingKeys.windSpeed)
             self.windSpeed = Measurement.speedStandardToUserLocale(doubleSpeed)

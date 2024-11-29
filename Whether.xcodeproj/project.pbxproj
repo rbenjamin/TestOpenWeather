@@ -23,6 +23,7 @@
 		B57665B42CC85BCE00D3659A /* Exceptions for "Whether" folder in "Whether" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Data Objects/HourlyForecast.swift",
 				Info.plist,
 				"Location Search & Management/UILocationsList.swift",
 			);

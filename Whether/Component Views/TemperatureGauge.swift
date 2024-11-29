@@ -96,7 +96,7 @@ struct TemperatureGauge: View {
                             .transition(self.width == 0 ? .push(from: .leading).combined(with: .opacity) : .push(from: .top).combined(with: .opacity))
                     } else if self.animationTimeout == false {
                         let minSide = min(size.width, size.height) - 4.0
-                        
+
                         let origin = position(in: size,
                                               temperature: self.range.lowerBound)
                         HStack(spacing: 0) {

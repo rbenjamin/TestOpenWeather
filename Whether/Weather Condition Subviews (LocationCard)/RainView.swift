@@ -15,7 +15,7 @@ struct RainView: View {
     let isDaytime: Bool
 
     var textColor: Color {
-        return self.isDaytime ? Color.secondary : Color("NightTextColor")
+        return self.isDaytime ? Color.dayTextColor : Color.nightTextColor
     }
 
     init(rain: CurrentWeather.Rain, isDaytime: Bool) {
@@ -62,7 +62,7 @@ struct SnowView: View {
     let hasSnow: Bool
     let isDaytime: Bool
     var textColor: Color {
-        return self.isDaytime ? Color.secondary : Color("NightTextColor")
+        return self.isDaytime ? Color.dayTextColor : Color.nightTextColor
     }
 
     init(snow: CurrentWeather.Snow, isDaytime: Bool) {

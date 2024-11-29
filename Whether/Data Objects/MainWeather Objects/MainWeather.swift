@@ -135,7 +135,7 @@ extension CurrentWeather {
         }
 
         init(from decoder: any Decoder) throws {
-            let container: KeyedDecodingContainer<CurrentWeather.MainWeather.CodingKeys> = try decoder.container(keyedBy: CurrentWeather.MainWeather.CodingKeys.self)
+            let container: KeyedDecodingContainer<CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
             /// OpenWeather - returns in kelvin
             /// (we want to convert based on device settings,
             /// rather than requesting a specific unit from OpenWeather.

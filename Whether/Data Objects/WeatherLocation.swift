@@ -99,6 +99,7 @@ final class WeatherLocation: CustomStringConvertible {
                   download manager: DownloadManager,
                   decoder: JSONDecoder,
                   force: Bool = false) async throws -> (any WeatherData)? {
+        guard !key.isEmpty else { throw DownloadError.emptyAPIKey }
         let date = Date()
         // 1) Determine if we've already downloaded this type recently --
         // if so, and `force = false`, we simply return the most recent data, decoded.

@@ -207,6 +207,10 @@ struct CardinalViewBackground: View {
         return path
     }
 
+    private func colorForCardinalHatch(primaryHatch: Bool) -> Color {
+        primaryHatch ? self.design.mainCardinalHatchColor : self.design.secondaryCardinalHatchColor
+    }
+
     private func drawLabels(in context: GraphicsContext,
                             frame: CGRect) {
 
@@ -265,7 +269,7 @@ struct CardinalViewBackground: View {
             var path = Path()
             path.move(to: startPoint)
             path.addLine(to: endPoint)
-            let color = GraphicsContext.Shading.color(isPrimaryCardinal ? self.design.mainCardinalHatchColor : self.design.secondaryCardinalHatchColor)
+            let color = GraphicsContext.Shading.color(colorForCardinalHatch(primaryHatch: isPrimaryCardinal))
             context.stroke(path,
                            with: color,
                            style: StrokeStyle(lineWidth: self.design.hatchLineWidth,

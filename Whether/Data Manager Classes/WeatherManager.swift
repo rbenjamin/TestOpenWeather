@@ -191,7 +191,7 @@ class WeatherManager: NSObject, ObservableObject {
             self.updateFromCLLocation(location: location)
         }
     }
-    
+
     /// Called when `LocationManager` finishes determining coordinates for the GPS location.
     func updateFromCLLocation(location: CLLocation) {
         if let oldLocation = self.previouslyRetrievedGPS, location.distance(from: oldLocation) < 1609.344 {
@@ -234,7 +234,7 @@ class WeatherManager: NSObject, ObservableObject {
                         /// Update `Settings` gps location to this object
                         self.settings.setGPSLocationObjectID(loc.persistentModelID, encoder: self.encoder)
                         self.settings.setDefaultLocationID(loc.persistentModelID, encoder: self.encoder)
-                        
+
                         self.currentWeatherLocation = loc
                         self.gpsWeatherLocation = loc
                     } catch let error as NSError {

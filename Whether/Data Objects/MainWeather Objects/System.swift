@@ -45,7 +45,7 @@ extension CurrentWeather {
             }
 
             init(from decoder: any Decoder) throws {
-                let container: KeyedDecodingContainer<CurrentWeather.System.CodingKeys> = try decoder.container(keyedBy: CurrentWeather.System.CodingKeys.self)
+                let container: KeyedDecodingContainer<System.CodingKeys> = try decoder.container(keyedBy: System.CodingKeys.self)
                 self.country = try container.decode(String.self, forKey: CodingKeys.country)
                 self.sunrise = try container.decode(Date.self, forKey: CodingKeys.sunrise)
                 self.sunset = try container.decode(Date.self, forKey: CodingKeys.sunset)

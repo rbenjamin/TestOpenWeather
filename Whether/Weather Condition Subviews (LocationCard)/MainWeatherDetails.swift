@@ -58,7 +58,7 @@ struct MainWeatherDetails: View {
                                                         endValue: 1020,
                                                         unit: .hectopascals)
     var textColor: Color {
-        return self.isDaytime ? Color.secondary : Color.nightTextColor
+        return self.isDaytime ? Color.dayTextColor : Color.nightTextColor
     }
 
     var body: some View {

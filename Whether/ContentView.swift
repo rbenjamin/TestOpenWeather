@@ -24,7 +24,7 @@ struct ContentView: View {
     @State private var locality: String = "Unknown Location"
     @State private var currentWeather: CurrentWeather?
     @State private var presentList: Bool = false
-    @State private var isDaytime: Bool = false
+    @State private var isDaytime: Bool = true
     @State private var showReloadNameView: Bool = false
     @State private var networkingState: Bool = false
     @State private var shouldReloadWeather: Bool = false
@@ -75,8 +75,7 @@ struct ContentView: View {
                 } label: {
                     Image(systemName: "location")
                         .keyframeAnimator(initialValue: ToolbarRotateKeyframe(),
-                                          trigger: self.gpsButtonTapped)
-                    { image, value in
+                                          trigger: self.gpsButtonTapped) { image, value in
                             image.rotationEffect(value.rotationAngle)
                     } keyframes: { _ in
                             KeyframeTrack(\.rotationAngle) {
@@ -212,7 +211,10 @@ struct ContentView: View {
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $presentList,
                    content: {
-                LocationsList(dismiss: self.$presentList, manager: self.weatherManager)
+                LocationsList(dismiss: self.$presentList,
+                              manager: self.weatherManager,
+                              backgroundColor: self.backgroundColor,
+                              isDaytime: self.isDaytime)
                     .environment(\.modelContext, self.modelContext)
             })
         }
