@@ -56,12 +56,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let location = locations.last {
             Task { @MainActor in
-                let settings = Settings.shared
-                settings.latitude = location.coordinate.latitude
-                settings.longitude = location.coordinate.longitude
-                settings.previousGPSAccessDate = Date()
-
-                settings.coordinates = location
+                Settings.shared.previousGPSAccessDate = Date()
                 self.coordinates.send(location)
             }
         }

@@ -38,102 +38,129 @@ struct ForecastRow: View {
     @State private var windSpeed: String = ""
     @State private var pressureString: String = ""
     @State private var humidityString = ""
+    @State private var forecastDateLabel: String = ""
+
+    func showDetails() {
+        withAnimation(.bouncy) {
+            self.expandRow.toggle()
+        }
+    }
 
     var body: some View {
-        Button {
-            withAnimation(.bouncy) {
-                self.expandRow.toggle()
-            }
-        } label: {
-            VStack {
-                    HStack {
-                        if let forecast {
-                            Text(forecast.forecastDate, format: .dateTime.weekday(.abbreviated).day())
-                                .font(.system(.caption,
-                                              design: .monospaced,
-                                              weight: .regular))
-//                                .foregroundStyle(self.textColor)
-                                .transition(.scale)
-                        } else {
-                            ProgressView()
-                                .progressViewStyle(TailProgressStyle(size: 12.0))
-                                .transition(.scale)
-                        }
-                        TemperatureGauge(temperature: self.$forecastTemp,
-                                         height: 12.0)
-
-                        if let first = self.forecast?.conditions.first {
-                            first.image(forDaytime: self.isDaytime)
-                                .resizable()
-                                .frame(width: 33.0, height: 33.0)
-                                .offset(y: 3)
-                                .transition(.scale)
-                        }
-                        if let forecast {
-                            Text(forecast.main.temperature, format: .measurement(width: .abbreviated, usage: .weather))
-                                .font(.system(.caption,
-                                              design: .monospaced,
-                                              weight: .bold))
-                                .foregroundStyle(self.textColor)
-                                .transition(.scale)
-
-                        } else {
-                            ProgressView()
-                                .progressViewStyle(TailProgressStyle(size: 12.0))
-                                .transition(.scale)
-                        }
+        VStack {
+            Button {
+                self.showDetails()
+            } label: {
+                HStack {
+                    if self.forecast != nil {
+                        Text(self.forecastDateLabel)
+                            .font(.system(.caption,
+                                          design: .monospaced,
+                                          weight: .regular))
+                            .transition(.scale)
+                            .accessibilityHint(Text("Forecast Date"))
+                    } else {
+                        ProgressView()
+                            .progressViewStyle(TailProgressStyle(size: 12.0))
+                            .transition(.scale)
                     }
-                    .frame(minHeight: 32,
-                           idealHeight: 32,
-                           maxHeight: .infinity)
-                if self.expandRow && self.forecast != nil {
-                    Divider()
-                        .padding(.bottom, 4)
+                    TemperatureGauge(temperature: self.$forecastTemp,
+                                     height: 12.0)
 
-                    HStack {
-
-                        VStack(alignment: .leading) {
-                            Text(self.detailedLabel)
-                            HStack {
-                                Text("Feels Like")
-                                    .fontWeight(.bold)
-                                Text(self.feelsLikeLabel)
-                                    .fontWeight(.regular)
-                            }
-                        }
-                        Spacer()
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text("Wind")
-                                    .fontWeight(.bold)
-                                Text(self.windSpeed)
-                                    .fontWeight(.regular)
-                            }
-                            HStack {
-                                Text("Humidity")
-                                    .fontWeight(.bold)
-                                Text(self.humidityString)
-                                    .fontWeight(.regular)
-                            }
-                        }
+                    if let first = self.forecast?.conditions.first {
+                        first.image(forDaytime: self.isDaytime)
+                            .resizable()
+                            .frame(width: 33.0, height: 33.0)
+                            .offset(y: 3)
+                            .transition(.scale)
                     }
-                    .font(.system(.caption,
-                                  design: .monospaced,
-                                  weight: .bold))
-                    .foregroundStyle(self.textColor)
-                    .padding(.bottom, 4.0)
+                    if let forecast {
+                        Text(forecast.main.temperature, format: .measurement(width: .abbreviated, usage: .weather))
+                            .font(.system(.caption,
+                                          design: .monospaced,
+                                          weight: .bold))
+                            .foregroundStyle(self.textColor)
+                            .transition(.scale)
+                            .accessibilityHint(Text("Temperature"))
+
+                    } else {
+                        ProgressView()
+                            .progressViewStyle(TailProgressStyle(size: 12.0))
+                            .transition(.scale)
+                    }
                 }
+                .frame(minHeight: 32,
+                       idealHeight: 32,
+                       maxHeight: .infinity)
             }
-            .foregroundStyle(self.textColor)
+            .buttonStyle(.borderless)
+            .accessibilityElement(children: AccessibilityChildBehavior.combine)
+            .accessibilityLabel(Text("Expand Date \(self.forecastDateLabel)"))
+            .accessibilityHint(Text("Show additional weather conditions for this day."))
 
+            if self.expandRow && self.forecast != nil {
+                Divider()
+                    .padding(.bottom, 4)
+
+                HStack {
+
+                    VStack(alignment: .leading) {
+                        Text(self.detailedLabel)
+                            .accessibilityHint(Text("Weather Conditions"))
+                            .accessibilityHint(Text(self.forecastDateLabel))
+
+                        HStack {
+                            Text("Feels Like")
+                                .fontWeight(.bold)
+                            Text(self.feelsLikeLabel)
+                                .fontWeight(.regular)
+                        }
+                        .accessibilityElement(children: AccessibilityChildBehavior.combine)
+                        .accessibilityLabel(Text("Feels Like: \(self.feelsLikeLabel)"))
+                        .accessibilityHint(Text(self.forecastDateLabel))
+
+                    }
+                    Spacer()
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text("Wind")
+                                .fontWeight(.bold)
+                            Text(self.windSpeed)
+                                .fontWeight(.regular)
+                        }
+                        .accessibilityElement(children: AccessibilityChildBehavior.combine)
+                        .accessibilityLabel(Text("Wind Speed: \(self.windSpeed)"))
+                        .accessibilityHint(Text(self.forecastDateLabel))
+
+                        HStack {
+                            Text("Humidity")
+                                .fontWeight(.bold)
+                            Text(self.humidityString)
+                                .fontWeight(.regular)
+                        }
+                        .accessibilityElement(children: AccessibilityChildBehavior.combine)
+                        .accessibilityLabel(Text("Humidity: \(self.humidityString)"))
+                        .accessibilityHint(Text(self.forecastDateLabel))
+                    }
+                }
+                .font(.system(.caption,
+                              design: .monospaced,
+                              weight: .bold))
+                .foregroundStyle(self.textColor)
+                .padding(.bottom, 4.0)
+                .accessibilityElement(children: AccessibilityChildBehavior.contain)
+                .accessibilityHint(Text("Details:"))
+            }
         }
-        .buttonStyle(.borderless)
+        .accessibilityElement(children: AccessibilityChildBehavior.contain)
+        .foregroundStyle(self.textColor)
         .padding([.leading, .trailing], 4.0)
         .frame(maxWidth: .infinity)
         .background {
             RoundedRectangle(cornerRadius: 6.0)
                 .fill(self.isDaytime ? Color.white.opacity(0.30) : Color.black.opacity(0.30))
         }
+
         .onChange(of: self.list, { oldValue, newValue in
             if self.index < newValue.count, oldValue != newValue {
                 withAnimation {
@@ -151,6 +178,7 @@ struct ForecastRow: View {
                 self.feelsLikeLabel = newValue.main.feelsLike.formattedWeatherString()
                 self.windSpeed = newValue.wind?.windSpeed.formattedWeatherString() ?? ""
                 self.humidityString = self.percentFormatter.string(from: NSNumber(value: newValue.main.humidity))!
+                self.forecastDateLabel = newValue.forecastDate.formatted(.dateTime.weekday(.abbreviated).day())
             }
         })
         .onAppear {
@@ -182,6 +210,8 @@ struct Forecast5DayListView: View {
             .transition(.push(from: .leading))
         }
         .groupBoxStyle(TransparentGroupBox(isDaytime: self.isDaytime))
+        .accessibilityElement(children: AccessibilityChildBehavior.contain)
+        .accessibilityLabel(Text("Five Day Forecast"))
         .transition(.scale)
     }
 }

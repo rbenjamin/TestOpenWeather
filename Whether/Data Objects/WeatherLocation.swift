@@ -99,13 +99,18 @@ final class WeatherLocation: CustomStringConvertible {
                   download manager: DownloadManager,
                   decoder: JSONDecoder,
                   force: Bool = false) async throws -> (any WeatherData)? {
+
         guard !key.isEmpty else { throw DownloadError.emptyAPIKey }
         let date = Date()
+
         // 1) Determine if we've already downloaded this type recently --
         // if so, and `force = false`, we simply return the most recent data, decoded.
         switch type {
         case .now:
-
+            if !force, let recent = weatherDownloadDate {
+                let distance = recent.distance(to: date)
+                print("time intervals since last weather download for \(self.locationName): \(distance)")
+            }
             if force == false, let recent = weatherDownloadDate,
                 recent.distance(to: date) < 600,
                 let data = self.weatherData {
@@ -113,6 +118,10 @@ final class WeatherLocation: CustomStringConvertible {
                                                                decoder: decoder)
             }
         case .pollution:
+            if !force, let recent = pollutionDownloadDate {
+                let distance = recent.distance(to: date)
+                print("time intervals since last weather download for \(self.locationName): \(distance)")
+            }
             if force == false,
                 let recent = pollutionDownloadDate,
                 recent.distance(to: date) < 600,
@@ -121,6 +130,10 @@ final class WeatherLocation: CustomStringConvertible {
                                                           decoder: decoder)
             }
         case .fiveDay:
+            if !force, let recent = forecastDownloadDate {
+                let distance = recent.distance(to: date)
+                print("time intervals since last weather download for \(self.locationName): \(distance)")
+            }
             if force == false,
                 let recent = forecastDownloadDate,
                 recent.distance(to: date) < 600,
@@ -162,38 +175,11 @@ final class WeatherLocation: CustomStringConvertible {
             Task { @MainActor in
                 /// Notify the app we're done networking
                 NotificationCenter.default.post(name: .networkingOff, object: nil)
-
-                switch type {
-                case .now:
-                    self.weatherData = data
-                case .pollution:
-                    self.pollutionData = data
-                case .fiveDay:
-                    self.forecastData = data
-                }
-
-                /// Update recently downloaded `date`, based on property `type`
-                switch type {
-                case .now:
-                    self.weatherDownloadDate = date
-                case .pollution:
-                    self.pollutionDownloadDate = date
-                case .fiveDay:
-                    self.forecastDownloadDate = date
-                }
+                self.updateWithData(data, downloadDate: date, type: type)
             }
-            /// Return the results of the decoding, based on `type`.
-            switch type {
-            case .now:
-                return try await CurrentWeather.decodeWithData(data,
-                                                               decoder: decoder)
-            case .pollution:
-                return try await Pollution.decodeWithData(data,
-                                                          decoder: decoder)
-            case .fiveDay:
-                return try await Forecast.decodeWithData(data,
-                                                         decoder: decoder)
-            }
+
+            return try await self.decodeDataForType(data, type: type, decoder: decoder)
+
         } catch let error as NSError {
             Task { @MainActor in
                 NotificationCenter.default.post(name: .networkingOff, object: nil)
@@ -204,20 +190,46 @@ final class WeatherLocation: CustomStringConvertible {
         }
     }
 
-    static var fetchGPSLocation: FetchDescriptor<WeatherLocation> {
-        var fetchGPS = FetchDescriptor<WeatherLocation>(predicate: #Predicate<WeatherLocation>{
-            $0.gpsLocation == true
-        }, sortBy: [SortDescriptor(\.lastUpdated)])
-        fetchGPS.fetchLimit = 1
-        return fetchGPS
+    /// Private function called by `download(type: ...)` to
+
+    private func decodeDataForType(_ data: Data,
+                                   type: WeatherDataType,
+                                   decoder: JSONDecoder) async throws -> (any WeatherData)? {
+        /// Return the results of the decoding, based on `type`.
+        switch type {
+        case .now:
+            return try await CurrentWeather.decodeWithData(data,
+                                                           decoder: decoder)
+        case .pollution:
+            return try await Pollution.decodeWithData(data,
+                                                      decoder: decoder)
+        case .fiveDay:
+            return try await Forecast.decodeWithData(data,
+                                                     decoder: decoder)
+        }
     }
 
-    static var fetchDefaultLocation: FetchDescriptor<WeatherLocation> {
-        var fetchDefault = FetchDescriptor<WeatherLocation>(predicate: #Predicate<WeatherLocation>{
-            $0.defaultLocation == true
-        }, sortBy: [SortDescriptor(\.lastUpdated)])
-        fetchDefault.fetchLimit = 1
-        return fetchDefault
+    /// Private function called by `download(type: ...)` to update `self` with the downloaded data object and the recent download date, based on weather data type.
+    @MainActor
+    private func updateWithData(_ data: Data, downloadDate date: Date, type: WeatherDataType) {
+        switch type {
+        case .now:
+            self.weatherData = data
+        case .pollution:
+            self.pollutionData = data
+        case .fiveDay:
+            self.forecastData = data
+        }
+
+        /// Update recently downloaded `date`, based on property `type`
+        switch type {
+        case .now:
+            self.weatherDownloadDate = date
+        case .pollution:
+            self.pollutionDownloadDate = date
+        case .fiveDay:
+            self.forecastDownloadDate = date
+        }
     }
 
     init() {

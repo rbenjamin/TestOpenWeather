@@ -33,24 +33,24 @@ struct WindView: View {
 
             HStack(alignment: .center) {
                 VStack(alignment: .leading) {
-                    LodableLabel(value: self.$windSpeed,
+                    LoadableLabel(value: self.$windSpeed,
                                  label: "Speed",
                                  textColor: self.textColor)
-//                        .id(self.isDaytime)
-                    LodableLabel(value: self.$gustLevel,
+                    .accessibilityHint(Text("Wind Speed"))
+
+                    LoadableLabel(value: self.$gustLevel,
                                  label: "Gusts",
                                  textColor: self.textColor)
-//                        .id(self.isDaytime)
-                    LodableLabel(value: self.$direction,
+                    .accessibilityHint(Text("Wind Gust Speed"))
+
+                    LoadableLabel(value: self.$direction,
                                  label: "Direction",
                                  textColor: self.textColor)
-//                        .id(self.isDaytime)
+                    .accessibilityHint(Text("Wind Direction"))
 
                 }
                 .padding(.trailing, 24)
-//                    .layoutPriority(1)
 
-//                .padding(.trailing, 12)
                 let design = CardinalViewBackground.Design(borderColor: self.textColor,
                                                            mainCardinalHatchColor: self.textColor,
                                                            secondaryCardinalHatchColor: self.textColor,
@@ -63,6 +63,7 @@ struct WindView: View {
             }
         }
         .groupBoxStyle(TransparentGroupBox(isDaytime: self.isDaytime))
+        .accessibilityLabel(Text("Wind Conditions"))
         .onChange(of: self.wind) { _, newValue in
             if let newValue {
                 withAnimation(.bouncy) {
@@ -71,7 +72,7 @@ struct WindView: View {
                 }
 
                 withAnimation(.bouncy.delay(0.5)) {
-                    self.direction = newValue.cardinalDirection.stringLabel
+                    self.direction = newValue.cardinalDirection.longLabel
                 }
             }
         }
@@ -82,7 +83,7 @@ struct WindView: View {
                     self.gustLevel = wind.gustLevel?.formatted()
                 }
                 withAnimation(.bouncy.delay(0.5)) {
-                    self.direction = wind.cardinalDirection.stringLabel
+                    self.direction = wind.cardinalDirection.longLabel
                 }
             }
         }

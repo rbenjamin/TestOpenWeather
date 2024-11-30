@@ -31,8 +31,8 @@ class Settings: ObservableObject {
     static let shared = Settings()
     private let defaults = UserDefaults.standard
 
-    @AppStorage(DefaultsKey.latitude.rawValue) var latitude: Double?
-    @AppStorage(DefaultsKey.longitude.rawValue) var longitude: Double?
+//    @AppStorage(DefaultsKey.latitude.rawValue) var latitude: Double?
+//    @AppStorage(DefaultsKey.longitude.rawValue) var longitude: Double?
     @AppStorage(DefaultsKey.language.rawValue) var language: String = "EN"
     @AppStorage(DefaultsKey.units.rawValue) var units: String = "standard"
 //    @AppStorage(DefaultsKey.locationEnabled.rawValue) var locationEnabled: Bool?
@@ -85,9 +85,6 @@ class Settings: ObservableObject {
     init() {
         /// Set the default coordinates -- allows us to update the location using the most recent location data (if any exists).
         /// LocationManager will update `coordinates` with the most recent location data when `CLLocationManager` finished updating location.
-        if let latitude, let longitude {
-            self.coordinates = CLLocation(latitude: latitude, longitude: longitude)
-        }
 
         let decoder = JSONDecoder()
 

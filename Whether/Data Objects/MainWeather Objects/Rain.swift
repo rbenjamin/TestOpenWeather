@@ -46,12 +46,12 @@ extension CurrentWeather {
         init(from decoder: any Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             if let oneHour = try container.decodeIfPresent(Double.self, forKey: .oneHour) {
-                self.oneHour = Measurement.rainfallStandardToUserLocale(oneHour, locale: .autoupdatingCurrent)
+                self.oneHour = Measurement.rainfallStandardToUserLocale(oneHour, locale: .current)
             } else {
                 self.oneHour = nil
             }
             if let threeHour = try container.decodeIfPresent(Double.self, forKey: .threeHour) {
-                self.threeHour = Measurement.rainfallStandardToUserLocale(threeHour, locale: .autoupdatingCurrent)
+                self.threeHour = Measurement.rainfallStandardToUserLocale(threeHour, locale: .current)
             } else {
                 self.threeHour = nil
             }

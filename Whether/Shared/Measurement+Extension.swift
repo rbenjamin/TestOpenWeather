@@ -30,11 +30,25 @@ extension UnitSpeed {
 }
 
 extension UnitLength {
-    static func inches(_ value: Double) -> Measurement<UnitLength> {
-            Measurement<UnitLength>(value: value, unit: .inches)
+    static func inchesSnowfall(_ value: Double) -> Measurement<UnitLength> {
+            let measurement = Measurement<UnitLength>(value: value, unit: .inches)
+        return measurement.converted(to: UnitLength(forLocale: .current, usage: .snowfall))
+
     }
-    static func millimeters(_ value: Double) -> Measurement<UnitLength> {
-        Measurement<UnitLength>(value: value, unit: .millimeters)
+    static func millimetersSnowfall(_ value: Double) -> Measurement<UnitLength> {
+        let measurement = Measurement<UnitLength>(value: value, unit: .millimeters)
+        return measurement.converted(to: UnitLength(forLocale: .current, usage: .snowfall))
+    }
+
+    static func inchesRain(_ value: Double) -> Measurement<UnitLength> {
+            let measurement = Measurement<UnitLength>(value: value, unit: .inches)
+        return measurement.converted(to: UnitLength(forLocale: .current, usage: .rainfall))
+
+    }
+
+    static func millimetersRain(_ value: Double) -> Measurement<UnitLength> {
+        let measurement = Measurement<UnitLength>(value: value, unit: .millimeters)
+        return measurement.converted(to: UnitLength(forLocale: .current, usage: .rainfall))
     }
 }
 
@@ -99,7 +113,7 @@ extension Measurement {
     /// which is `Kelvin`, into the Device Locale's `UnitTemperature`
     ///
     static func temperatureStandardToUserLocale(_ value: Double,
-                                                locale: Locale = .autoupdatingCurrent) -> Measurement<UnitTemperature> {
+                                                locale: Locale = .current) -> Measurement<UnitTemperature> {
         var current = Measurement<UnitTemperature>(value: value, unit: UnitTemperature.kelvin)
         current.convert(to: UnitTemperature(forLocale: locale, usage: .weather))
         return current
@@ -108,7 +122,7 @@ extension Measurement {
     /// into the Device Locale's `UnitTemperature`
 
     static func speedStandardToUserLocale(_ value: Double,
-                                          locale: Locale = .autoupdatingCurrent) -> Measurement<UnitSpeed> {
+                                          locale: Locale = .current) -> Measurement<UnitSpeed> {
         var current = Measurement<UnitSpeed>(value: value, unit: UnitSpeed.metersPerSecond)
         current.convert(to: UnitSpeed(forLocale: locale, usage: .asProvided))
         return current
@@ -118,7 +132,7 @@ extension Measurement {
 
     static func pressureStandardToUserLocale(_ value: Double,
                                              initialUnit: UnitPressure = .hectopascals,
-                                             locale: Locale = .autoupdatingCurrent) -> Measurement<UnitPressure> {
+                                             locale: Locale = .current) -> Measurement<UnitPressure> {
         // 1. Create pressure as hectopascals (hPa) -- this is what OpenWeather returns.
         let fromAPI = Measurement<UnitPressure>.init(value: value, unit: initialUnit)
         // 2. Convert to local pressure unit:
@@ -126,21 +140,21 @@ extension Measurement {
         return toLocal
     }
     static func rainfallStandardToUserLocale(_ value: Double,
-                                             locale: Locale = .autoupdatingCurrent) -> Measurement<UnitLength> {
+                                             locale: Locale = .current) -> Measurement<UnitLength> {
         var current = Measurement<UnitLength>(value: value, unit: .millimeters)
         current.convert(to: UnitLength(forLocale: locale, usage: .rainfall))
         return current
     }
 
     static func snowfallStandardToUserLocale(_ value: Double,
-                                             locale: Locale = .autoupdatingCurrent) -> Measurement<UnitLength> {
+                                             locale: Locale = .current) -> Measurement<UnitLength> {
         var current = Measurement<UnitLength>(value: value, unit: .millimeters)
         current.convert(to: UnitLength(forLocale: locale, usage: .snowfall))
         return current
     }
 
     static func visibilityStandardToUserLocale(_ value: Double,
-                                               locale: Locale = .autoupdatingCurrent) -> Measurement<UnitLength> {
+                                               locale: Locale = .current) -> Measurement<UnitLength> {
         var current = Measurement<UnitLength>(value: value, unit: .meters)
         current.convert(to: UnitLength(forLocale: locale, usage: MeasurementFormatUnitUsage<UnitLength>.visibility))
         return current

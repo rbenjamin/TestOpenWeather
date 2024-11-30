@@ -11,18 +11,14 @@ struct LocationCard: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.scenePhase) var scenePhase
 
+    @ObservedObject var weatherManager: WeatherManager
     private let locations: [WeatherLocation]
     private let index: Int
     private let location: WeatherLocation
     private let isGPS: Bool
-    private let apiKey: String
 //    let session: URLSession
-    private let decoder: JSONDecoder
     private let date: Date
     private let locality: String
-    private let percentFormatter: NumberFormatter
-    private let pressureFormatter: MeasurementFormatter
-    private let downloadManager: DownloadManager
 
     /// Ensures we don't begin downloading weather data until a location is visible.
     @Binding private var visibleWeather: CurrentWeather?
@@ -50,21 +46,18 @@ struct LocationCard: View {
 
     let scrollTo: (WeatherLocation?) -> Void
 
-    init(locations: [WeatherLocation],
+    init(weatherManager: WeatherManager,
+         locations: [WeatherLocation],
          index: Int,
          currentWeather: Binding<CurrentWeather?>,
          currentLocation: Binding<WeatherLocation?>,
          isDaytime: Binding<Bool>,
          backgroundColor: Binding<Color>,
-         apiKey: String,
-         downloadManager: DownloadManager,
-         decoder: JSONDecoder,
          date: Date = Date(),
-         percentFormatter: NumberFormatter,
-         pressureFormatter: MeasurementFormatter,
          shouldReload: Binding<Bool>,
          error: Binding<LocalizedError?>,
          scrollTo: @escaping (WeatherLocation?) -> Void) {
+        self.weatherManager = weatherManager
         _backgroundColor = backgroundColor
         _isDaytime = isDaytime
         _visibleWeather = currentWeather
@@ -77,12 +70,7 @@ struct LocationCard: View {
         _error = error
         self.locality = location.locationName ?? "Unknown Location"
         self.isGPS = location.gpsLocation
-        self.apiKey = apiKey
-        self.downloadManager = downloadManager
-        self.decoder = decoder
         self.date = date
-        self.percentFormatter = percentFormatter
-        self.pressureFormatter = pressureFormatter
     }
 
     @ViewBuilder
@@ -107,52 +95,12 @@ struct LocationCard: View {
 
     #if DEBUG
     var debugView: some View {
-        GroupBox("Debug View") {
-            LabeledContent("Current Default: ") {
-                Text(self.locality)
-            }
-            .labeledContentStyle(WeatherLabelStyle(foregroundStyle: self.textColor))
-
-            if let main {
-                LabeledContent("Min:",
-                               value: main.minTemp.formatted(.measurement(usage: .weather)))
-                    .labeledContentStyle(WeatherLabelStyle(foregroundStyle: self.textColor))
-                LabeledContent("Max:",
-                               value: main.maxTemp.formatted(.measurement(usage: .weather)))
-                    .labeledContentStyle(WeatherLabelStyle(foregroundStyle: self.textColor))
-                Divider()
-
-                LabeledContent("Ground Pressure:",
-                               value: main.groundLevel.formatted(.measurement(width: .abbreviated,
-                                                                              usage: .barometric)))
-                    .labeledContentStyle(WeatherLabelStyle(foregroundStyle: self.textColor))
-
-                LabeledContent("Sea Pressure:",
-                               value: main.seaLevel.formatted(.measurement(width: .abbreviated,
-                                                                           usage: .barometric)))
-                    .labeledContentStyle(WeatherLabelStyle(foregroundStyle: self.textColor))
-            }
-            Divider()
-            if let label = conditions?.condition?.stringLabel {
-                LabeledContent("Conditions:", value: label)
-                    .labeledContentStyle(WeatherLabelStyle(foregroundStyle: self.textColor))
-            }
-            Divider()
-            if let comps = self.pollution?.readings.first?.components {
-                let keys = Array(comps.keys)
-                ForEach(0 ..< keys.count, id: \.self) { idx in
-                    let key = keys[idx]
-                    let value: Measurement<UnitDispersion> = comps[key]!
-                    LabeledContent(key.rawValue,
-                                   value: value.formatted(.measurement(width: .abbreviated,
-                                                                       usage: .asProvided)))
-                    .labeledContentStyle(WeatherLabelStyle(foregroundStyle: self.textColor))
-                }
-            }
-
-        }
-        .groupBoxStyle(TransparentGroupBox(isDaytime: self.isDaytime))
-
+        DebugView(main: self.$main,
+                  conditions: self.$conditions,
+                  pollution: self.$pollution,
+                  textColor: self.textColor,
+                  isDaytime: self.isDaytime,
+                  locality: self.locality)
     }
     #endif
 
@@ -177,14 +125,14 @@ struct LocationCard: View {
 
                 Forecast5DayListView(fiveDay: self.$fiveDay,
                                      isDaytime: self.isDaytime,
-                                     percentFormatter: self.percentFormatter)
+                                     percentFormatter: self.weatherManager.percentFormatter)
 
                 MainWeatherDetails(mainWeather: self.$main,
                                    currentWeather: self.$currentWeather,
                                    pollution: self.$pollution,
                                    isDaytime: self.isDaytime,
-                                   pressureFormatter: self.pressureFormatter,
-                                   percentFormatter: self.percentFormatter,
+                                   pressureFormatter: self.weatherManager.pressureFormatter,
+                                   percentFormatter: self.weatherManager.percentFormatter,
                                    locationName: self.locality)
 
                 WindView(wind: self.$wind,
@@ -209,7 +157,6 @@ struct LocationCard: View {
         }
         .onDisappear {
             self.particleViewSettings = nil
-
         }
         .onChange(of: self.shouldReload, { oldValue, newValue in
             if newValue != oldValue && newValue == true {
@@ -242,9 +189,11 @@ struct LocationCard: View {
     }
 
     private func loadExistingData() async {
+        let decoder = weatherManager.decoder
+
         do {
             if let forecast = try await location.existingWeather(type: .fiveDay,
-                                                                 decoder: self.decoder) as? Forecast {
+                                                                 decoder: decoder) as? Forecast {
 
                 let forecastAtTime = await forecast.fiveDayForecast(timeOfDay: self.date)
                 Task { @MainActor in
@@ -255,7 +204,7 @@ struct LocationCard: View {
             }
 
             if let current = try await location.existingWeather(type: .now,
-                                                                decoder: self.decoder) as? CurrentWeather {
+                                                                decoder: decoder) as? CurrentWeather {
                 Task { @MainActor in
                     self.currentWeather = current
                     self.isDaytime = current.system.isDaytime
@@ -283,7 +232,7 @@ struct LocationCard: View {
             }
 
             if let pollution = try await location.existingWeather(type: .pollution,
-                                                                  decoder: self.decoder) as? Pollution {
+                                                                  decoder: decoder) as? Pollution {
                 Task { @MainActor in
                     self.pollution = pollution
                 }
@@ -298,6 +247,12 @@ struct LocationCard: View {
     }
 
     func updateView(currentWeather: CurrentWeather) {
+
+        let daytime = currentWeather.system.isDaytime
+        if self.isDaytime != daytime {
+            self.isDaytime = daytime
+        }
+
         self.currentWeather = currentWeather
         self.visibleWeather = currentWeather
         let color = currentWeather.backgroundColor(daytime: self.isDaytime)
@@ -310,45 +265,50 @@ struct LocationCard: View {
         if let first = currentWeather.conditions.first {
             self.conditions = first
         }
+        self.rain = currentWeather.rain
         self.wind = currentWeather.wind
         self.snow = currentWeather.snow
-        self.rain = currentWeather.rain
     }
 
     private func downloadData(force: Bool) async {
+        let decoder = weatherManager.decoder
+        let key = APIKey.key
+        let manager = self.weatherManager.downloadManager
+
         do {
             guard let location = self.currentLocation else { return }
-            guard let currentWeather = try await location.download(type: .now,
-                                                                   apiKey: self.apiKey,
-                                                                   download: self.downloadManager,
-                                                                   decoder: self.decoder,
-                                                                   force: force) as? CurrentWeather
-            else { return }
-            guard let forecast = try await location.download(type: .fiveDay,
-                                                             apiKey: self.apiKey,
-                                                             download: self.downloadManager,
-                                                             decoder: self.decoder,
-                                                             force: force) as? Forecast
-            else { return }
+            if let currentWeather = try await location.download(type: .now,
+                                                                   apiKey: key,
+                                                                   download: manager,
+                                                                   decoder: decoder,
+                                                                force: force) as? CurrentWeather {
+                Task { @MainActor in
+                    self.updateView(currentWeather: currentWeather)
+                }
+            }
+            if let forecast = try await location.download(type: .fiveDay,
+                                                             apiKey: key,
+                                                             download: manager,
+                                                             decoder: decoder,
+                                                          force: force) as? Forecast {
+
+                let normalized = await forecast.fiveDayForecast(timeOfDay: self.date)
+                Task { @MainActor in
+                    self.fiveDay = normalized
+                }
+            }
+
             if let pollution = try await location.download(type: .pollution,
-                                                           apiKey: self.apiKey,
-                                                           download: self.downloadManager,
-                                                           decoder: self.decoder,
+                                                           apiKey: key,
+                                                           download: manager,
+                                                           decoder: decoder,
                                                            force: force) as? Pollution {
                 Task { @MainActor in
                     self.pollution = pollution
                 }
             }
-            let normalized = await forecast.fiveDayForecast(timeOfDay: self.date)
 
             Task { @MainActor in
-                let daytime = currentWeather.system.isDaytime
-                if self.isDaytime != daytime {
-                    self.isDaytime = daytime
-                }
-                self.fiveDay = normalized
-
-                self.updateView(currentWeather: currentWeather)
                 // Builds an optional `ParticleSettings` object _if_ there is `Rain`, `Snow`, or `Conditions.mist`.
                 // Uses `Wind` to determine how much to angle the particle effect.
                 self.particleViewSettings = ParticleSettings.new(rain: self.rain,
@@ -387,18 +347,14 @@ struct LocationCard: View {
 }
 
 #Preview {
-    LocationCard(locations: [],
+    LocationCard(weatherManager: WeatherManager(locationManager: LocationManager()),
+                 locations: [],
                  index: 0,
                  currentWeather: .constant(nil),
                  currentLocation: .constant(nil),
                  isDaytime: .constant(false),
                  backgroundColor: .constant(Color("ClearSkyColdDay")),
-                 apiKey: "",
-                 downloadManager: DownloadManager(),
-                 decoder: JSONDecoder(),
                  date: Date(),
-                 percentFormatter: NumberFormatter.percentFormatter,
-                 pressureFormatter: Measurement<UnitPressure>.pressureFormatter,
                  shouldReload: .constant(false),
                  error: .constant(nil)
     ) { _ in

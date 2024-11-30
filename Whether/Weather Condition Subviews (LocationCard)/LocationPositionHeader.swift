@@ -62,16 +62,25 @@ struct LocationPositionHeader: View {
         }
     }
 
+    func loadPrevious() {
+        if let previousLocation {
+            self.scrollTo(previousLocation)
+        }
+    }
+
+    func loadNext() {
+        if let nextLocation {
+            self.scrollTo(nextLocation)
+        }
+    }
+
     var body: some View {
         let columns = [GridItem(alignment: .leading),
                        GridItem(alignment: .center),
                        GridItem(alignment: .trailing)]
         LazyVGrid(columns: columns) {
             Button {
-                if let previousLocation {
-
-                    self.scrollTo(previousLocation)
-                }
+                self.loadPrevious()
             } label: {
                 Image(systemName: "chevron.compact.left")
                     .imageScale(.medium)
@@ -90,6 +99,10 @@ struct LocationPositionHeader: View {
                     .fill(self.isDaytime ? Color.white.opacity(0.30) : Color.black.opacity(0.30))
             }
             .opacity(previousLocation != nil ? 1 : 0)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("\(previousLabel ?? "...")"), isEnabled: previousLabel != nil)
+            .accessibilityHint(Text("Previous Location"), isEnabled: previousLabel != nil)
+            .accessibilityAddTraits(.isButton)
 
 //            self.locationLabel
             Text(self.current.locationName ?? "Unknown Name")
@@ -100,11 +113,10 @@ struct LocationPositionHeader: View {
                 .truncationMode(.tail)
                 .multilineTextAlignment(.center)
                 .shadow(color: Color.black.opacity(0.50), radius: 1.0, x: 1, y: 1)
+                .accessibilityHint(Text("Current Location"))
 
             Button {
-                if let nextLocation {
-                    self.scrollTo(nextLocation)
-                }
+                self.loadNext()
             } label: {
                 Text("\(nextLabel ?? "...")")
                     .font(.system(.callout, design: .rounded, weight: .semibold))
@@ -124,7 +136,10 @@ struct LocationPositionHeader: View {
                     .fill(self.isDaytime ? Color.white.opacity(0.30) : Color.black.opacity(0.30))
             }
             .opacity(nextLocation != nil ? 1 : 0)
-
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("\(nextLabel ?? "...")"), isEnabled: previousLabel != nil)
+            .accessibilityHint(Text("Next Location"), isEnabled: previousLabel != nil)
+            .accessibilityAddTraits(.isButton)
         }
             .padding([.leading, .trailing], 12)
     }

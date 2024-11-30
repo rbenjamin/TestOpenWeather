@@ -72,6 +72,7 @@ struct ContentView: View {
                     print("GPS Location Tapped!")
                     self.weatherManager.currentWeatherLocation = self.weatherManager.gpsWeatherLocation
                     self.weatherManager.updateGPSLocation()
+
                 } label: {
                     Image(systemName: "location")
                         .keyframeAnimator(initialValue: ToolbarRotateKeyframe(),
@@ -135,17 +136,13 @@ struct ContentView: View {
     func scrollContent(proxy: ScrollViewProxy) -> some View {
         LazyHStack(alignment: .center, spacing: 0) {
             ForEach(0 ..< self.locations.count, id: \.self) { idx in
-                LocationCard(locations: self.locations,
+                    LocationCard(weatherManager: self.weatherManager,
+                                 locations: self.locations,
                                  index: idx,
                                  currentWeather: self.$currentWeather,
                                  currentLocation: self.$visibleLocation,
                                  isDaytime: self.$isDaytime,
                                  backgroundColor: self.$backgroundColor,
-                                 apiKey: APIKey.key,
-                                 downloadManager: self.weatherManager.downloadManager,
-                                 decoder: self.weatherManager.decoder,
-                                 percentFormatter: self.weatherManager.percentFormatter,
-                                 pressureFormatter: self.weatherManager.pressureFormatter,
                                  shouldReload: self.$shouldReloadWeather,
                                  error: self.$weatherManager.error,
                                  scrollTo: { weatherLocation in
@@ -178,6 +175,9 @@ struct ContentView: View {
 
                     .onChange(of: self.visibleLocation, { old, new in
                         if old != new, let new {
+                            if new != self.weatherManager.currentWeatherLocation {
+                                self.weatherManager.currentWeatherLocation = new
+                            }
                             self.locality = new.locationName ?? "Unknown Location"
                             self.settings.setDefaultLocationID(new.persistentModelID,
                                                                encoder: self.weatherManager.encoder)
@@ -187,8 +187,12 @@ struct ContentView: View {
                     })
                     .onChange(of: self.weatherManager.currentWeatherLocation, { old, new in
                         if old != new, let new {
-                            self.visibleLocation = new
-                            proxy.scrollTo(new)
+                            withAnimation {
+                                proxy.scrollTo(new)
+                            }
+                            if new != self.visibleLocation {
+                                self.visibleLocation = new
+                            }
                         }
                     })
                 }
@@ -212,6 +216,7 @@ struct ContentView: View {
             .sheet(isPresented: $presentList,
                    content: {
                 LocationsList(dismiss: self.$presentList,
+                              visibleLocation: self.$visibleLocation,
                               manager: self.weatherManager,
                               backgroundColor: self.backgroundColor,
                               isDaytime: self.isDaytime)
@@ -236,7 +241,7 @@ struct ContentView: View {
         })
         .onReceive(NotificationCenter.default.publisher(for: .networkingOff), perform: { _ in
             // Delay turning the notification icon off for 1 second to ensure visiblity of the icon before networking finishes.
-            Timer.scheduledTimer(withTimeInterval:  1, repeats: false) { _ in
+            Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { _ in
                 Task { @MainActor in
                     withAnimation(.easeIn(duration: 0.25)) {                        self.networkingState = false
                     }
@@ -283,4 +288,3 @@ struct ContentView: View {
     ContentView()
         .modelContainer(for: WeatherLocation.self, inMemory: true)
 }
- 

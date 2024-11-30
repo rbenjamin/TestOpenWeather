@@ -1,5 +1,5 @@
 //
-//  LodableLabel.swift
+//  LoadableLabel.swift
 //  Whether
 //
 //  Created by Ben Davis on 10/23/24.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct LodableLabel<Value: StringProtocol>: View {
+struct LoadableLabel<Value: StringProtocol>: View {
     @Binding var value: Value?
     let label: LocalizedStringKey
 //    let fontStyle: Font.TextStyle
@@ -73,22 +73,24 @@ struct LodableLabel<Value: StringProtocol>: View {
                     .transition(.scale)
                     .foregroundStyle(textColor)
                     .transition(.scale)
-//                    .id(self.id)
+                    .accessibilityHidden(true)
             } else if !timeoutReached {
                 ProgressView()
                     .progressViewStyle(TailProgressStyle(category: .medium))
+                    .accessibilityHidden(true)
             } else {
                 Text(self.placeholder)
                     .font(self.font)
-                    .foregroundStyle(textColor)
+                    .foregroundStyle(self.textColor.secondary)
                     .transition(.scale)
-//                    .id(self.id)
+                    .accessibilityHidden(true)
             }
         } label: {
             Text(self.label)
                 .foregroundStyle(textColor)
-//                .id(self.id)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(self.value == nil ? Text("Loading ") + Text(self.label) : Text(self.label) + Text(" \(self.value!)"))
         .onAppear {
             self.id = UUID()
 
@@ -103,10 +105,10 @@ struct LodableLabel<Value: StringProtocol>: View {
 }
 
 #Preview {
-    LodableLabel(value: .constant(100.0.formatted()), label: "Label")
+    LoadableLabel(value: .constant(100.0.formatted()), label: "Label")
 }
 
-struct LodableText<Value: StringProtocol>: View {
+struct LoadableText<Value: StringProtocol>: View {
     @Binding var value: Value?
     let timeout: TimeInterval
     let timeoutPlaceholder: LocalizedStringKey
@@ -143,5 +145,5 @@ struct LodableText<Value: StringProtocol>: View {
 }
 
 #Preview {
-    LodableText(.constant("Test"))
+    LoadableText(.constant("Test"))
 }

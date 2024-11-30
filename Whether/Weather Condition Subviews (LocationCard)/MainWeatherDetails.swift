@@ -64,30 +64,31 @@ struct MainWeatherDetails: View {
     var body: some View {
 
         GroupBox("Today") {
-                LodableLabel(value: self.$temperature,
+                LoadableLabel(value: self.$temperature,
                              label: "Temperature", textColor: self.textColor)
 
-                LodableLabel(value: self.$feelsLike,
+                LoadableLabel(value: self.$feelsLike,
                              label: "Feels Like", textColor: self.textColor)
 
                 TemperatureGauge(temperature: self.$gaugeTemp,
                                  height: 24.0)
                 Divider()
                     .padding([.top, .bottom], 8)
-                LodableLabel(value: self.$airQualityLabel,
+                LoadableLabel(value: self.$airQualityLabel,
                              label: "Air Quality", textColor: self.textColor)
-                LodableLabel(value: self.$cloudiness,
+                LoadableLabel(value: self.$cloudiness,
                              label: "Cloud Cover", textColor: self.textColor)
-                LodableLabel(value: self.$humidity,
+                LoadableLabel(value: self.$humidity,
                              label: "Humidity", textColor: self.textColor)
                 HStack {
                     /// Since low pressure is consistent with storm or weather event,
                     /// and "high" pressure is consistent with fair weather,
                     /// We style the gauge so low pressure is red and high pressure is blue.
                     ///
-                    LoadableLabelContent("Pressure",
-                                         value: self.$pressure,
-                                         textColor: self.textColor) { pressure in
+                    LoadableLabelContent("Pressure", value: self.$pressure, textColor: self.textColor) { pressure in
+                        let pressureFormatted = self.pressureFormatter.string(from: pressure)
+                        return pressureFormatted
+                    } content: { pressure in
                         HStack {
                             Spacer()
                             GaugeView(value: self.$guagePressure,
@@ -103,10 +104,6 @@ struct MainWeatherDetails: View {
                                     .font(.caption)
                                     .foregroundStyle(self.textColor)
                             }, trailingOffset: CGPoint(x: 3, y: -2))
-                            .accessibilityLabel(Text("Pressure Gauge"))
-                            .accessibilityValue(Text(pressure,
-                                                     format: .measurement(width: .abbreviated,
-                                                                          usage: .asProvided)))
                             .frame(width: 88, height: 68)
 
                             VStack {
@@ -121,13 +118,14 @@ struct MainWeatherDetails: View {
                         }
                     }
                     .id(self.isDaytime)
-
                 }
         }
         .groupBoxStyle(TransparentGroupBox(isDaytime: self.isDaytime))
+        .accessibilityElement(children: AccessibilityChildBehavior.contain)
+        .accessibilityLabel(Text("Today's Weather"))
         .onChange(of: self.mainWeather) { _, newValue in
             if let newValue {
-                withAnimation(.bouncy.delay(1)) {
+                withAnimation(.bouncy.delay(0.5)) {
                     self.temperature = newValue.temperature.formattedWeatherString()
                     self.feelsLike = newValue.feelsLike.formattedWeatherString()
                     self.humidity = self.percentFormatter.string(from: NSNumber(value: newValue.humidity))!
@@ -137,7 +135,7 @@ struct MainWeatherDetails: View {
                     self.gaugeTemp = newValue.temperature.converted(to: .celsius)
                 }
             } else {
-                withAnimation(.bouncy.delay(1)) {
+                withAnimation(.bouncy.delay(0.5)) {
                     self.guagePressure = Measurement<UnitPressure>(value: 0, unit: .hectopascals)
                     self.gaugeTemp = nil
                     self.temperature = nil

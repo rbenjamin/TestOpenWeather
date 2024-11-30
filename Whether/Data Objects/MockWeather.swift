@@ -7,14 +7,13 @@
 
 import Foundation
 
-/// `MockWeather` contains all the "mock" weather objects, for testing UI and view previews.
 // MARK: - Mock Values -
 
 extension Pollution {
 
     #if DEBUG
     /// `UI Testing`
-    static func mockPollutionWithQuality(date: Date, quality: Readings.AirQualityReading) -> Pollution {
+    static func mockPollution(date: Date, quality: Readings.AirQualityReading) -> Pollution {
         return Pollution(readings: [Readings.mockReadings(date: date, airQuality: quality)])
     }
     #endif

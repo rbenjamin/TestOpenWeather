@@ -195,7 +195,6 @@ class ParticleSceneKitViewController: UIViewController {
     private var scnView: SCNView!
     private var scnScene: SCNScene!
     private var cameraNode: SCNNode!
-    private var planeNode: SCNNode!
     private var particleSystem: SCNParticleSystem?
 
     var effect: WeatherEffect
@@ -275,6 +274,7 @@ class ParticleSceneKitViewController: UIViewController {
 
     func setupView() {
         self.view.backgroundColor = self.sceneBackgroundColor
+        print("Particle SceneKit View canBecomeFocused: \(self.view.canBecomeFocused)")
         let view = SCNView(frame: self.view.bounds)
         self.scnView = view
         view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -301,16 +301,20 @@ class ParticleSceneKitViewController: UIViewController {
          camera.usesOrthographicProjection = true
          camera.orthographicScale = 5  // Adjust this to control visible area
          cameraNode.camera = camera
+        cameraNode.focusBehavior = .none
          // Position camera to look straight ahead
          cameraNode.position = SCNVector3(x: 0, y: 0, z: 10)
          // Add camera to scene
         scnScene.rootNode.addChildNode(cameraNode)
     }
 
+    /** Uses the `WeatherEffect` enum and `WeatherEffectDirection` enum to build a tuple containing the acceleration speed and emitter position for the Scene Kit Particle Effect.  We move the emitter position based on direction so that even if the effect slants to the right or left we still have the majority of the view window being filled by the effect.
+     
+        - parameter effect: The effect (rain, snow, or mist) that should be shown.
+        - parameter direction: How slanted the effect should be when crossing the screen.
+     */
     private func particleAngle(effect: WeatherEffect,
                                direction: WeatherEffectDirection) -> CGFloat {
-        switch effect {
-        case .rain:
         switch direction {
         case .angleRight:
             return 15
@@ -323,14 +327,33 @@ class ParticleSceneKitViewController: UIViewController {
         default:
             return 0
         }
-        default:
-            if case WeatherEffectDirection.leftToRight = direction {
-                return 30
-            }
-            return 68.7
-        }
+//        switch effect {
+//        case .rain:
+//        switch direction {
+//        case .angleRight:
+//            return 15
+//        case .angleRightHard:
+//            return 30
+//        case .angleLeft:
+//            return -15
+//        case .angleLeftHard:
+//            return -30
+//        default:
+//            return 0
+//        }
+//        default:
+//            if case WeatherEffectDirection.leftToRight = direction {
+//                return 30
+//            }
+//            return 68.7
+//        }
     }
 
+    /** Uses the `WeatherEffect` enum and `WeatherEffectDirection` enum to build a tuple containing the acceleration speed and emitter position for the Scene Kit Particle Effect.  We move the emitter position based on direction so that even if the effect slants to the right or left we still have the majority of the view window being filled by the effect.
+     
+        - parameter effect: The effect (rain, snow, or mist) that should be shown.
+        - parameter direction: How slanted the effect should be when crossing the screen.
+     */
     private func accelerationAndEmitterPosition(effect: WeatherEffect,
                                                 direction: WeatherEffectDirection) -> (SCNVector3, SCNMatrix4) {
         var emitterPosition: SCNMatrix4!
@@ -383,7 +406,6 @@ class ParticleSceneKitViewController: UIViewController {
                                            chamferRadius: 0)
         // Particle properties
         particleSystem.particleVelocity = velocity
-        particleSystem.isLightingEnabled = true
         particleSystem.particleImage = image
         particleSystem.particleSize = self.size
         particleSystem.particleSizeVariation = self.sizeVariation

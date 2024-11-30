@@ -77,13 +77,17 @@ struct LocationSearchView: View {
                     .focused($focused)
                     .textFieldStyle(.plain)
                     .foregroundStyle(self.foregroundStyle)
+                    .accessibilityAddTraits(.isSearchField)
                 Button {
-                    self.submit()
+                    if self.locationName.isEmpty == false {
+                        self.submit()
+                    }
                 } label: {
                     Text(Image(systemName: "location.magnifyingglass"))
                         .foregroundStyle(self.foregroundStyle)
-                        .disabled(self.locationName.isEmpty)
                 }
+                .accessibilityLabel("Search for Location")
+                .disabled(self.locationName.isEmpty)
             }
             .padding([.leading, .trailing], 16)
             .padding([.top, .bottom], 8)
@@ -113,10 +117,12 @@ struct LocationSearchView: View {
                                 Text(locality)
                                 Text(adminArea).foregroundStyle(Color.secondary)
                             }
+                            .accessibilityElement(children: .combine)
                         } else if let name = location.name {
                             Text(name)
                         }
                     }
+                    .accessibilityHint(Text("Add New Weather Location"))
                 }
                 .listRowBackground(self.listRowBackground)
                 .foregroundStyle(self.foregroundStyle)
@@ -132,12 +138,12 @@ struct LocationSearchView: View {
         .background(self.backgroundColor)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
+                Button("Cancel", role: .cancel) {
                     self.dismiss.toggle()
-                } label: {
-                    Text("Cancel")
-                        .foregroundStyle(self.foregroundStyle)
                 }
+                .foregroundStyle(self.foregroundStyle)
+                .accessibilityHint(Text("Return to Locations List"))
+
             }
         }
         .onAppear {

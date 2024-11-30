@@ -24,6 +24,7 @@ struct LocationsList: View {
     }, sortBy: [SortDescriptor(\WeatherLocation.lastUpdated)])) var locations: [WeatherLocation]
 
     @Binding var dismiss: Bool
+    @Binding var visibleLocation: WeatherLocation?
 
     @FocusState private var fieldFocus: Bool
     @State private var showOverlay: Bool = false
@@ -38,8 +39,14 @@ struct LocationsList: View {
     @State private var showDownloadedMarks: Bool = false
     @State private var pickedLocation: WeatherLocation?
 
-    init(dismiss: Binding<Bool>, manager: WeatherManager, backgroundColor: Color, isDaytime: Bool) {
+    init(dismiss: Binding<Bool>,
+         visibleLocation: Binding<WeatherLocation?>,
+         manager: WeatherManager,
+         backgroundColor: Color,
+         isDaytime: Bool) {
+
         _dismiss = dismiss
+        _visibleLocation = visibleLocation
         self.settings = Settings.shared
         self.weatherManager = manager
         self.backgroundColor = backgroundColor
@@ -58,6 +65,13 @@ struct LocationsList: View {
         }
     }
 
+    func showLocation(_ location: WeatherLocation) {
+        self.pickedLocation = location
+        self.weatherManager.updateFromExisting(location)
+
+        self.dismiss.toggle()
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -69,7 +83,7 @@ struct LocationsList: View {
                     } label: {
                         HStack {
                                 Image(systemName: "checkmark")
-                                    .opacity(gpsLocation == self.weatherManager.currentWeatherLocation ? 1.0 : 0.0)
+                                .opacity(gpsLocation == self.visibleLocation ? 1.0 : 0.0)
                             Text(name)
                             Spacer()
                             Image(systemName: "location.fill")
@@ -79,24 +93,31 @@ struct LocationsList: View {
                     .listRowBackground(self.listRowBackground)
                     .foregroundStyle(self.foregroundStyle)
                     .deleteDisabled(true)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityLabel(Text(name))
+                    .accessibilityHint(Text("Show Current Location"))
                 }
                 ForEach(self.locations, id: \.id) { location in
                     if let name = location.locationName {
                         Button {
-                            self.pickedLocation = location
-                            self.weatherManager.updateFromExisting(location)
-
-                            self.dismiss.toggle()
+                            self.showLocation(location)
                         } label: {
                             HStack {
                                 Image(systemName: "checkmark")
-                                    .opacity(location == self.weatherManager.currentWeatherLocation ? 1.0 : 0.0)
+                                    .opacity(location == self.visibleLocation ? 1.0 : 0.0)
                                 Text(name)
                                 Spacer()
                             }
                         }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityLabel(Text(name))
+                        .accessibilityHint(Text("Show Current Location"))
                     } else {
-                        Text("Unknown Location")
+                        Button("Unknown Location") {
+                            self.showLocation(location)
+                        }
                     }
                 }
                 .onDelete { indexSet in
@@ -107,12 +128,20 @@ struct LocationsList: View {
             }
             .scrollContentBackground(.hidden)
             .toolbar {
-                ToolbarItem {
+
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel", role: .cancel) {
+                        self.dismiss.toggle()
+                    }
+                    .accessibilityHint(Text("Dismiss Locations List"))
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         self.showOverlay.toggle()
                     } label: {
                         Label("New", systemImage: "plus")
                             .foregroundStyle(self.foregroundStyle)
+                            .accessibilityHint(Text("Add New Location"))
                     }
                 }
             }
@@ -134,7 +163,7 @@ struct LocationsList: View {
                                    isDaytime: self.isDaytime)
             }
         })
-        .onChange(of: self.weatherManager.currentWeatherLocation, { _, newValue in
+        .onChange(of: self.visibleLocation, { _, newValue in
             if newValue != self.pickedLocation {
                 self.dismiss.toggle()
             }
@@ -190,6 +219,7 @@ struct LocationsList: View {
 #Preview {
     let settings = Settings()
     LocationsList(dismiss: .constant(false),
+                  visibleLocation: .constant(nil),
                   manager: WeatherManager(locationManager: LocationManager()),
                   backgroundColor: .white,
                   isDaytime: true)

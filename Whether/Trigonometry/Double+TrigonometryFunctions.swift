@@ -1,7 +1,6 @@
 import Foundation
 import SwiftUI
 
-
 extension Double: TrigonometryFunctions {
     public static func opposite(angle: Angle, hypothenuse: Double) -> Double {
         return sin(angle.radians) * hypothenuse

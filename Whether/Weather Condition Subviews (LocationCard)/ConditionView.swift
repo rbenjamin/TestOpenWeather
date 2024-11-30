@@ -53,17 +53,23 @@ struct ConditionView: View {
                             Text(self.isGPSWeather ? " \(Image(systemName: "location"))" : "")
                                 .font(.system(.headline, design: .rounded, weight: .regular))
                                 .foregroundStyle(Color.blue)
-
                         }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(Text(self.locality))
+                        .accessibilityHint(self.isGPSWeather ? Text("Current Location") : Text("Visible Location"))
+
                         Text(tempString)
                             .font(.system(.headline, design: .rounded, weight: .bold))
                             .foregroundStyle(self.textColor)
+                            .accessibilityHint(Text("Current Temperature"))
                         Text(self.mainLabel)
                             .font(.system(.subheadline, design: .rounded))
                             .foregroundStyle(self.textColor)
+                            .accessibilityHint(Text("Weather Conditions"))
                         Text(self.weatherDetails)
                             .font(.system(.callout, design: .rounded))
                             .foregroundStyle(self.textColor)
+                            .accessibilityHint(Text("Detailed Conditions"))
                     }
                     Spacer()
 
@@ -76,6 +82,7 @@ struct ConditionView: View {
                         }
                     }
                     .frame(width: 120, height: 120)
+                    .accessibilityHint(Text("Image of Current Weather Conditions"))
 
                     TemperatureGauge(temperature: self.$gaugeTemp,
                                      width: 14.0)
@@ -83,11 +90,12 @@ struct ConditionView: View {
                 }
             }
             .groupBoxStyle(TransparentGroupBox(isDaytime: self.isDaytime))
+            .accessibilityLabel(Text("Weather Overview"))
             .onChange(of: self.condition) { oldValue, newValue in
 //                print("condition changed (\(self.locality))")
                 if oldValue != newValue, let newValue {
                     withAnimation(.bouncy) {
-                        let details = newValue.weatherDetails.capitalized            
+                        let details = newValue.weatherDetails.capitalized
                         self.mainLabel = newValue.mainLabel.capitalized
                         self.weatherDetails = newValue.condition?.stringLabel ?? details
                         self.conditionImage = newValue.image(forDaytime: self.isDaytime)

@@ -32,6 +32,8 @@ struct WhetherApp: App {
         .modelContainer(sharedModelContainer)
         .onChange(of: self.scenePhase) { _, newValue in
             switch newValue {
+            case .inactive:
+                try? self.sharedModelContainer.mainContext.save()
             case .background:
                 try? self.sharedModelContainer.mainContext.save()
             default: break

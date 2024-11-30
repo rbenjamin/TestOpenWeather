@@ -18,7 +18,7 @@ class WeatherManager: NSObject, ObservableObject {
     let pressureFormatter: MeasurementFormatter
     let percentFormatter: NumberFormatter
     let decoder = JSONDecoder()
-    let encoder = JSONEncoder()
+    let encoder = JSONEncoder() // Used by Settings to encode PermanentIdentifiers.
     let locationManager: LocationManager
     let downloadManager = DownloadManager()
     lazy var geocoder = CLGeocoder()
@@ -27,6 +27,7 @@ class WeatherManager: NSObject, ObservableObject {
     var selectedMarkSink: AnyCancellable?
     var locationsEnabledSink: AnyCancellable?
     var mainContext: ModelContext?
+
     @Published var previouslyRetrievedGPS: CLLocation?
     @Published var selectedPlacemark: CLPlacemark?
     @Published var currentWeatherLocation: WeatherLocation?
@@ -53,22 +54,12 @@ class WeatherManager: NSObject, ObservableObject {
     func loadCurrentLocation() {
         if let gpsWeatherLocation {
             self.currentWeatherLocation = gpsWeatherLocation
-        } else {
-            #if DEBUG
-            fatalError("WeatherManager.gpsWeatherLocation == nil:  gpsWeatherLocation should be set!")
-            #else
-            print("WeatherManager.gpsWeatherLocation == nil:  gpsWeatherLocation should be set!")
-            #endif
         }
     }
 
-    /// `updateFromExisting(_:)` is called when user changes locations manually.
-    ///
-    /// - Updates the current weather view with an existing location that isn't the user's current coordinates.
-    /// - Updates the default weather view shown in `Settings`, so if the user leaves the app this weather location
-    ///   is used as a default.
-    /// - Downloads fresh weather data for the picked location.
-    ///
+    /// `updateFromExisting(_:)` is called when user changes locations manually from LocationsList.
+    /// Loads the weather location position in the ContentView's scroll view.
+    /// - parameter existing: The existing SwiftData WeatherLocation object to be shown.
 
     func updateFromExisting(_ existing: WeatherLocation) {
 #if DEBUG
@@ -80,9 +71,9 @@ class WeatherManager: NSObject, ObservableObject {
         }
     }
 
-    /// Called after user picks a CLPlacemark when adding a new location.  Called by `selectedMarkSink` `sink()` in init.
-    /// Downloads fresh weather data for the location and updates the existing WeatherLocation object.
-    ///
+    /// Called after user picks a CLPlacemark when adding a new location.  Called by `selectedMarkSink` `sink()` in WeatherManager `init` function. Sets the location details with a location name and coordinates.
+    /// - parameter placemark: The placemark the user matched via the search view.
+    /// - parameter existing: The weather location to update.
     func loadDataUpdateExisting(_ placemark: CLPlacemark, existing: WeatherLocation) {
         guard let location = placemark.location else { return }
 
@@ -94,6 +85,7 @@ class WeatherManager: NSObject, ObservableObject {
         }
     }
 
+    /// Called when user taps toolbar button to reload coordinates for the stored GPS location.
     func updateGPSLocation() {
         if self.settings.locationEnabled == true {
             self.gpsButtonDisabled = true
@@ -106,14 +98,13 @@ class WeatherManager: NSObject, ObservableObject {
         }
     }
 
-    /// Load default location and GPS location (if available)
+    /// Load default location and GPS location (if available) -- called in ContentView onAppear.
     @MainActor
-    func beginUpdatingWeather(userReload: Bool = false) {
+    func beginUpdatingWeather() {
 
         guard self.currentWeatherLocation == nil else {
             return
         }
-        // First load exising default -- may be
         if let existingDefault = settings.defaultLocation(context: self.mainContext) {
                 self.currentWeatherLocation = existingDefault
         }
@@ -182,6 +173,7 @@ class WeatherManager: NSObject, ObservableObject {
             }
 
         })
+
         /// Track when location services has updated Settings with new coordinates for the default weather
         ///
         coordinateSink = self.locationManager.coordinates.sink { [weak self] location in
@@ -227,7 +219,8 @@ class WeatherManager: NSObject, ObservableObject {
                                     fatalError("Failed to geocode \(error)")
                     #endif
                 }
-                /// Update the view:
+                /// Update the settings with location persistent ID
+                /// Update the current weather location object
                 Task { @MainActor in
                     do {
                         try self.mainContext?.save()
@@ -257,7 +250,7 @@ class WeatherManager: NSObject, ObservableObject {
             }
         }
         do {
-            let placemarks = try await self.geocoder.reverseGeocodeLocation(location, preferredLocale: .autoupdatingCurrent)
+            let placemarks = try await self.geocoder.reverseGeocodeLocation(location, preferredLocale: .current)
             if let first = placemarks.first {
                     /// Only update the date if the geocode was a success:
                 self.settings.previousReverseGeocodeDate = currDate

@@ -53,7 +53,6 @@ enum DownloadError: Error, LocalizedError {
     case decodeFailed(type: WeatherDataType, location: WeatherLocation, error: Error)
     case mimeTypeFailure(failureReason: String)
 
-
     public var errorDescription: String? {
         switch self {
         case .emptyAPIKey:
@@ -74,7 +73,7 @@ enum DownloadError: Error, LocalizedError {
             return "Download failed: mime-type doesn't match required: \(failure)"
         }
     }
-    
+
     public var errorCode: String? {
         switch self {
         case .locationIsNil: return "300"

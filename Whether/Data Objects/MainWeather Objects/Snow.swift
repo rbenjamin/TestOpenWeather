@@ -49,13 +49,13 @@ extension CurrentWeather {
         init(from decoder: any Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             if let oneHour = try container.decodeIfPresent(Double.self, forKey: .oneHour) {
-                self.oneHour = Measurement.snowfallStandardToUserLocale(oneHour, locale: .autoupdatingCurrent)
+                self.oneHour = Measurement.snowfallStandardToUserLocale(oneHour, locale: .current)
             } else {
                 self.oneHour = nil
             }
 
             if let threeHour = try container.decodeIfPresent(Double.self, forKey: .threeHour) {
-                self.threeHour = Measurement.snowfallStandardToUserLocale(threeHour, locale: .autoupdatingCurrent)
+                self.threeHour = Measurement.snowfallStandardToUserLocale(threeHour, locale: .current)
             } else {
                 self.threeHour = nil
             }
@@ -74,4 +74,39 @@ extension CurrentWeather {
 
     }
 
+}
+
+extension CurrentWeather.Snow {
+
+    /** SnowDensity converts the UnitLength measurement of snow into an enum category of `light`, `medium`, `heavy`, and `extreme`.  Used primarily for the SceneKit particle views to determine how heavy the snow in the particle view should be falling.
+     */
+    enum SnowDensity: CaseIterable {
+        case light
+        case medium
+        case heavy
+        case extreme
+
+        var localizedString: String {
+            switch self {
+            case .light: return "light"
+            case .medium: return "medium"
+            case .heavy: return "heavy"
+            case .extreme: return "extreme"
+            }
+        }
+
+        init(forecast: Measurement<UnitLength>) {
+           // Ensure we're in mm/h
+            let snowDensity = forecast.converted(to: .millimeters).value
+            if (0.01 ..< 1.0).contains(snowDensity) {
+                self = .light
+            } else if (1.0 ..< 2.5).contains(snowDensity) {
+                self = .medium
+            } else if (2.5 ..< 5.0).contains(snowDensity) {
+                self = .heavy
+            } else {
+                self = .extreme
+            }
+        }
+    }
 }

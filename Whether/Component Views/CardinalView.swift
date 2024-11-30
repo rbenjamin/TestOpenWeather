@@ -19,6 +19,7 @@ struct CardinalView: View {
     @State private var animate: Bool = false
     @State private var handAngle: Angle = Angle.zero
     @State private var windIconAngle: Angle = Angle(degrees: 0)
+    @State private var accessibilityValue = ""
 
     init(design: CardinalViewBackground.Design = .init(),
          wind: Binding<CurrentWeather.Wind?>,
@@ -86,10 +87,15 @@ struct CardinalView: View {
             }
             .padding(2)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Wind Direction")
+            .accessibilityValue(self.wind == nil ? "Unknown Direction" : self.accessibilityValue)
+            .accessibilityHint(Text("Cardinal Wind Direction Compass"))
             .onChange(of: self.wind?.direction) { _, newValue in
                 if let newValue {
                     let direction = CurrentWeather.Wind.WindDirection.init(degrees: newValue)
-                    withAnimation(.interpolatingSpring.delay(2.0)) {
+                    self.accessibilityValue = direction.longLabel
+                    withAnimation(.interpolatingSpring.delay(1.25)) {
                         self.handAngle = Angle(degrees: direction.normalizedDegrees())
                         self.windIconAngle = Angle(degrees: direction.normalizedDegrees() - 90)
                     }
@@ -98,7 +104,9 @@ struct CardinalView: View {
             .onAppear {
                 if let dir = self.wind?.direction {
                     let direction = CurrentWeather.Wind.WindDirection.init(degrees: dir)
-                    withAnimation(.interpolatingSpring.delay(2.0)) {
+                    self.accessibilityValue = direction.longLabel
+
+                    withAnimation(.interpolatingSpring.delay(1.25)) {
                         self.handAngle = Angle(degrees: direction.normalizedDegrees())
                         self.windIconAngle = Angle(degrees: direction.normalizedDegrees() - 90)
 

@@ -133,7 +133,9 @@ struct TemperatureGauge: View {
         .onChange(of: self.temperature) { oldValue, newValue in
             if let newValue, newValue != oldValue {
                 self.condition = CurrentWeather.ConditionModifier(temperature: newValue.converted(to: .kelvin).value)
-                self.accessibilityValue = newValue.formatted(.measurement(width: .abbreviated, usage: .asProvided))
+//                self.accessibilityValue = newValue.converted(to: .).formatted(.measurement(width: .abbreviated, usage: .asProvided))
+                let converted: Measurement<UnitTemperature> = newValue.converted(to: UnitTemperature(forLocale: .current, usage: .weather))
+                self.accessibilityValue = converted.formattedWeatherString()
 
             }
         }
@@ -187,7 +189,5 @@ struct TemperatureGauge: View {
 
 #Preview {
     let temp = Measurement<UnitTemperature>(value: 72.5, unit: .fahrenheit)
-    let min =  Measurement<UnitTemperature>(value: 70.0, unit: .fahrenheit)
-    let max =  Measurement<UnitTemperature>(value: 75.0, unit: .fahrenheit)
     TemperatureGauge(temperature: .constant(temp), width: 12.0)
 }
