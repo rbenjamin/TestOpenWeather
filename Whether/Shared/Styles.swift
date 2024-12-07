@@ -9,6 +9,12 @@ import Foundation
 import SwiftUI
 struct TransparentGroupBox: GroupBoxStyle {
     let isDaytime: Bool
+    let shouldHighlight: Bool
+
+    init(isDaytime: Bool, shouldHighlight: Bool = false) {
+        self.isDaytime = isDaytime
+        self.shouldHighlight = shouldHighlight
+    }
     func makeBody(configuration: Configuration) -> some View {
         VStack {
             HStack {
@@ -21,8 +27,11 @@ struct TransparentGroupBox: GroupBoxStyle {
         }
         .padding()
         .background {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Material.ultraThinMaterial.opacity(isDaytime ? 0.90 : 0.75))
+            HighlightableRoundedRect(cornerRadius: 8,
+                                     style: .continuous,
+                                     highlight: self.shouldHighlight,
+                                     fill: Material.ultraThinMaterial.opacity(isDaytime ? 0.75 : 0.75))
+
         }
     }
 }
@@ -35,12 +44,14 @@ struct TransparentGroupBox: GroupBoxStyle {
 }
 
 struct TailProgressStyle: ProgressViewStyle {
+
     enum TailSizeCategory: CGFloat {
         case small = 12
         case medium = 18
         case large = 24
         case xLarge = 48
     }
+
     let size: CGFloat
     let colors: [Color]
 

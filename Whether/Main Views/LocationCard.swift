@@ -8,8 +8,19 @@
 import SwiftUI
 
 struct LocationCard: View {
+
+    enum PositionTagID: String {
+        case header
+        case conditions
+        case forecast
+        case mainWeather
+        case wind
+        case snow
+        case rain
+    }
     @Environment(\.modelContext) var modelContext
     @Environment(\.scenePhase) var scenePhase
+    @Environment(\.verticalSizeClass) var verticalSizeClass
 
     @ObservedObject var weatherManager: WeatherManager
     private let locations: [WeatherLocation]
@@ -45,6 +56,8 @@ struct LocationCard: View {
     @Binding private var shouldReload: Bool
 
     let scrollTo: (WeatherLocation?) -> Void
+
+    @State private var yOffset = 0.0
 
     init(weatherManager: WeatherManager,
          locations: [WeatherLocation],
@@ -82,7 +95,9 @@ struct LocationCard: View {
                 .transition(.opacity)
 
             if let particleViewSettings {
-                ParticleSceneKitView(settings: particleViewSettings, backgroundColor: self.backgroundUIColor)
+                ParticleSceneKitView(settings: particleViewSettings,
+                                     backgroundColor: self.backgroundUIColor,
+                                     yOffset: $yOffset, verticalSizeClass: self.verticalSizeClass)
                     .transition(.opacity)
             }
         }
@@ -106,52 +121,67 @@ struct LocationCard: View {
 
     var body: some View {
 
-        ScrollView([.vertical], content: {
-            VStack(alignment: .center, spacing: 12) {
+            ScrollView([.vertical], content: {
+                VStack(alignment: .center, spacing: 12) {
 
-                LocationPositionHeader(isDaytime: self.isDaytime,
-                                       previousLocation: index > 0 ? locations[index - 1] : nil,
-                                       current: self.location,
-                                       nextLocation: index + 1 < locations.count ? locations[index + 1] : nil,
-                                       scrollTo: self.scrollTo)
-                .transition(.slide)
-                .padding(.top, 120)
+                    LocationPositionHeader(isDaytime: self.isDaytime,
+                                           previousLocation: index > 0 ? locations[index - 1] : nil,
+                                           current: self.location,
+                                           nextLocation: index + 1 < locations.count ? locations[index + 1] : nil,
+                                           scrollTo: self.scrollTo)
+                    .transition(.slide)
+                    .padding(.top, 8)
+                    .id(PositionTagID.header.rawValue)
+//                    .border(.red)
 
-                ConditionView(condition: self.conditions,
-                              mainWeather: self.main,
-                              locality: self.locality,
-                              isGPSWeather: self.isGPS,
-                              isDaytime: self.isDaytime)
+                    ConditionView(condition: self.conditions,
+                                  mainWeather: self.main,
+                                  locality: self.locality,
+                                  isGPSWeather: self.isGPS,
+                                  isDaytime: self.isDaytime)
+                    .id(PositionTagID.conditions.rawValue)
 
-                Forecast5DayListView(fiveDay: self.$fiveDay,
-                                     isDaytime: self.isDaytime,
-                                     percentFormatter: self.weatherManager.percentFormatter)
+                    ForecastFiveDayListView(fiveDay: self.$fiveDay,
+                                         isDaytime: self.isDaytime,
+                                         percentFormatter: self.weatherManager.percentFormatter)
+                    .id(PositionTagID.forecast.rawValue)
 
-                MainWeatherDetails(mainWeather: self.$main,
-                                   currentWeather: self.$currentWeather,
-                                   pollution: self.$pollution,
-                                   isDaytime: self.isDaytime,
-                                   pressureFormatter: self.weatherManager.pressureFormatter,
-                                   percentFormatter: self.weatherManager.percentFormatter,
-                                   locationName: self.locality)
+                    MainWeatherDetails(mainWeather: self.$main,
+                                       currentWeather: self.$currentWeather,
+                                       pollution: self.$pollution,
+                                       isDaytime: self.isDaytime,
+                                       pressureFormatter: self.weatherManager.pressureFormatter,
+                                       percentFormatter: self.weatherManager.percentFormatter,
+                                       locationName: self.locality)
+                    .id(PositionTagID.mainWeather.rawValue)
 
-                WindView(wind: self.$wind,
-                         isDaytime: self.isDaytime)
-                    .id(self.location)
-                if let rain {
-                    RainView(rain: rain,
+                    WindView(wind: self.$wind,
                              isDaytime: self.isDaytime)
-                }
-                if let snow {
-                    SnowView(snow: snow,
-                             isDaytime: self.isDaytime)
-                }
+                    .id(PositionTagID.wind.rawValue)
 
-                Spacer()
-                    .frame(height: 24)
-            }
+                    if let rain {
+                        RainView(rain: rain,
+                                 isDaytime: self.isDaytime)
+                        .id(PositionTagID.rain.rawValue)
+                    }
+                    if let snow {
+                        SnowView(snow: snow,
+                                 isDaytime: self.isDaytime)
+                        .id(PositionTagID.snow.rawValue)
+                    }
 
-        })
+                    Spacer()
+                        .frame(height: 24)
+                }
+                .scrollTargetLayout()
+
+            })
+            .onScrollGeometryChange(for: Double.self, of: { geo in
+                return Double(geo.contentOffset.y)
+            }, action: { _, newValue in
+                self.yOffset = newValue
+            })
+            .padding([.top, .bottom], self.verticalSizeClass == .regular ? 46 : 22)
         .background {
             self.backgroundView
         }
@@ -220,7 +250,7 @@ struct LocationCard: View {
                     }
 
                     self.wind = current.wind
-                    self.snow = current.snow
+
                     self.rain = current.rain
                     withAnimation {
                         self.particleViewSettings = ParticleSettings.new(rain: self.rain,
@@ -252,7 +282,7 @@ struct LocationCard: View {
         if self.isDaytime != daytime {
             self.isDaytime = daytime
         }
-
+        print("incoming timeZone: \(currentWeather.timeZone) timeZone: \(TimeZone.current.identifier)")
         self.currentWeather = currentWeather
         self.visibleWeather = currentWeather
         let color = currentWeather.backgroundColor(daytime: self.isDaytime)
@@ -268,6 +298,9 @@ struct LocationCard: View {
         self.rain = currentWeather.rain
         self.wind = currentWeather.wind
         self.snow = currentWeather.snow
+//        self.rain = CurrentWeather.Rain.init(oneHour: UnitLength.inchesRain(2.0), threeHour: nil)
+//        self.snow = CurrentWeather.Snow.init(oneHour: UnitLength.inchesSnowfall(2.0), threeHour: nil)
+
     }
 
     private func downloadData(force: Bool) async {
@@ -276,54 +309,104 @@ struct LocationCard: View {
         let manager = self.weatherManager.downloadManager
 
         do {
-            guard let location = self.currentLocation else { return }
-            if let currentWeather = try await location.download(type: .now,
+            async let weatherDownload = location.download(type: .now,
                                                                    apiKey: key,
                                                                    download: manager,
                                                                    decoder: decoder,
-                                                                force: force) as? CurrentWeather {
-                Task { @MainActor in
-                    self.updateView(currentWeather: currentWeather)
-                }
-            }
-            if let forecast = try await location.download(type: .fiveDay,
+                                                                   force: force) as? CurrentWeather
+            async let forecastDownload = location.download(type: .fiveDay,
                                                              apiKey: key,
                                                              download: manager,
                                                              decoder: decoder,
-                                                          force: force) as? Forecast {
+                                                             force: force) as? Forecast
 
-                let normalized = await forecast.fiveDayForecast(timeOfDay: self.date)
-                Task { @MainActor in
-                    self.fiveDay = normalized
-                }
-            }
+            async let pollutionDownload = location.download(type: .pollution,
+                                                              apiKey: key,
+                                                              download: manager,
+                                                              decoder: decoder,
+                                                              force: force) as? Pollution
 
-            if let pollution = try await location.download(type: .pollution,
-                                                           apiKey: key,
-                                                           download: manager,
-                                                           decoder: decoder,
-                                                           force: force) as? Pollution {
-                Task { @MainActor in
-                    self.pollution = pollution
-                }
-            }
+            let (currentWeather, forecast, pollution) = try await (weatherDownload, forecastDownload, pollutionDownload)
 
             Task { @MainActor in
-                // Builds an optional `ParticleSettings` object _if_ there is `Rain`, `Snow`, or `Conditions.mist`.
-                // Uses `Wind` to determine how much to angle the particle effect.
+                if let currentWeather {
+                    self.updateView(currentWeather: currentWeather)
+                }
+                if let forecast {
+                    let normalized = await forecast.fiveDayForecast(timeOfDay: self.date)
+                    self.fiveDay = normalized
+                }
+                self.pollution = pollution
+                
+
                 self.particleViewSettings = ParticleSettings.new(rain: self.rain,
                                                                  snow: self.snow,
                                                                  wind: self.wind,
                                                                  conditions: self.conditions)
+
             }
         } catch let error as DownloadError {
-            self.error = error
-            self.printErrorDescription(downloadError: error)
-        } catch let error {
-            print("WeatherLocation.download failed: Unknown Error: \(error)")
-        }
-
+           self.error = error
+           self.printErrorDescription(downloadError: error)
+       } catch let error {
+           print("WeatherLocation.download failed: Unknown Error: \(error)")
+       }
     }
+
+//    private func downloadData(force: Bool) async {
+//        let decoder = weatherManager.decoder
+//        let key = APIKey.key
+//        let manager = self.weatherManager.downloadManager
+//
+//        do {
+//            guard let location = self.currentLocation else { return }
+//            if let currentWeather = try await location.download(type: .now,
+//                                                                   apiKey: key,
+//                                                                   download: manager,
+//                                                                   decoder: decoder,
+//                                                                force: force) as? CurrentWeather {
+//                Task { @MainActor in
+//                    self.updateView(currentWeather: currentWeather)
+//                }
+//            }
+//            if let forecast = try await location.download(type: .fiveDay,
+//                                                             apiKey: key,
+//                                                             download: manager,
+//                                                             decoder: decoder,
+//                                                          force: force) as? Forecast {
+//
+//                let normalized = await forecast.fiveDayForecast(timeOfDay: self.date)
+//                Task { @MainActor in
+//                    self.fiveDay = normalized
+//                }
+//            }
+//
+//            if let pollution = try await location.download(type: .pollution,
+//                                                           apiKey: key,
+//                                                           download: manager,
+//                                                           decoder: decoder,
+//                                                           force: force) as? Pollution {
+//                Task { @MainActor in
+//                    self.pollution = pollution
+//                }
+//            }
+//
+//            Task { @MainActor in
+//                // Builds an optional `ParticleSettings` object _if_ there is `Rain`, `Snow`, or `Conditions.mist`.
+//                // Uses `Wind` to determine how much to angle the particle effect.
+//                self.particleViewSettings = ParticleSettings.new(rain: self.rain,
+//                                                                 snow: self.snow,
+//                                                                 wind: self.wind,
+//                                                                 conditions: self.conditions)
+//            }
+//        } catch let error as DownloadError {
+//            self.error = error
+//            self.printErrorDescription(downloadError: error)
+//        } catch let error {
+//            print("WeatherLocation.download failed: Unknown Error: \(error)")
+//        }
+//
+//    }
 
     func printErrorDescription(downloadError: DownloadError) {
         switch downloadError {

@@ -10,6 +10,8 @@ import Foundation
 actor DownloadManager: NSObject {
     private lazy var urlSession: URLSession = {
         let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForResource = 300
+        configuration.waitsForConnectivity = true
         return URLSession(configuration: configuration, delegate: nil, delegateQueue: nil)
     }()
 

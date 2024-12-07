@@ -140,8 +140,10 @@ struct LocationPositionHeader: View {
             .accessibilityLabel(Text("\(nextLabel ?? "...")"), isEnabled: previousLabel != nil)
             .accessibilityHint(Text("Next Location"), isEnabled: previousLabel != nil)
             .accessibilityAddTraits(.isButton)
+//            .border(.pink)
         }
-            .padding([.leading, .trailing], 12)
+//        .border(.green)
+        .padding([.leading, .trailing], 6)
     }
 }
 

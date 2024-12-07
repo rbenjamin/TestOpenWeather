@@ -13,7 +13,7 @@ import SwiftUI
 extension CurrentWeather {
 
     enum WeatherMeshColors {
-        
+
         /** Returns a Color object for the current condition.
             - parameter weatherMesh: Provide either `.clearSkyDay` or `.clearSkyNight` with the current condition modifier.
             - returns: The color for the specified temperature.
@@ -43,7 +43,7 @@ extension CurrentWeather {
                 }
             }
         }
-        
+
         /** Returns a UIColor object for the current condition.
             - parameter weatherMesh: Provide either `.clearSkyDay` or `.clearSkyNight` with the current condition modifier.
             - returns: The color for the specified temperature.

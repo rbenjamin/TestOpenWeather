@@ -9,7 +9,7 @@ import Foundation
 
 extension CurrentWeather {
     struct WeatherConditions: Identifiable, Codable, Equatable, Hashable, CustomStringConvertible {
-        let id: Double
+        let id: Int
         let mainLabel: String
         let weatherDetails: String
         let icon: String
@@ -37,7 +37,7 @@ extension CurrentWeather {
             URL(string: "https://openweathermap.org/img/wn/\(self.icon)@2x.png")!
         }
 
-        init(id: Double, mainLabel: String, description: String, icon: String) {
+        init(id: Int, mainLabel: String, description: String, icon: String) {
             self.id = id
             self.mainLabel = mainLabel
             self.weatherDetails = description
@@ -46,7 +46,7 @@ extension CurrentWeather {
 
         init(from decoder: any Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
-            let id = try container.decode(Double.self, forKey: WeatherConditions.CodingKeys.id)
+            let id = try container.decode(Int.self, forKey: WeatherConditions.CodingKeys.id)
             self.id = id
             self.mainLabel = try container.decode(String.self, forKey: CodingKeys.mainLabel)
             self.weatherDetails = try container.decode(String.self, forKey: CodingKeys.weatherDetails)

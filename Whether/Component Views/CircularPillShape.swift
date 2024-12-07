@@ -16,6 +16,7 @@ struct CircularPillShape: Shape {
     func path(in rect: CGRect) -> Path {
         let radius = min(rect.size.width, rect.size.height) / 2
         let center = CGPoint(x: rect.midX, y: rect.midY)
+        let hypothenuse = (radius - (thickness / 2))
 
         var path = Path()
         // Top-curve from left to right
@@ -26,8 +27,9 @@ struct CircularPillShape: Shape {
                     clockwise: false)
 
         // Rounded corner (right side)
-        var point = center + CGPoint(angle: endAngle,
-                                     hypothenuse: (radius - (thickness / 2)))
+        var point = center
+        point.x += cos(endAngle.radians) * hypothenuse
+        point.y += sin(endAngle.radians) * hypothenuse
 
         path.addArc(center: point,
                     radius: thickness / 2,
@@ -43,8 +45,9 @@ struct CircularPillShape: Shape {
                     clockwise: true)
 
         // Rounded corner (left side)
-        point = center + CGPoint(angle: startAngle,
-                                 hypothenuse: (radius - (thickness / 2)))
+        point = center
+        point.x += cos(startAngle.radians) * hypothenuse
+        point.y += sin(startAngle.radians) * hypothenuse
 
         path.addArc(center: point,
                     radius: thickness / 2,
@@ -54,4 +57,10 @@ struct CircularPillShape: Shape {
 
         return path
     }
+}
+
+#Preview {
+    CircularPillShape(startAngle: Angle(degrees: 90),
+                      endAngle: Angle(degrees: 270),
+                      thickness: 2)
 }

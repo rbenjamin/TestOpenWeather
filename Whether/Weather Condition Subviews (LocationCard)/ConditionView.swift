@@ -89,7 +89,7 @@ struct ConditionView: View {
                     .frame(height: 110)
                 }
             }
-            .groupBoxStyle(TransparentGroupBox(isDaytime: self.isDaytime))
+            .groupBoxStyle(TransparentGroupBox(isDaytime: self.isDaytime, shouldHighlight: true))
             .accessibilityLabel(Text("Weather Overview"))
             .onChange(of: self.condition) { oldValue, newValue in
 //                print("condition changed (\(self.locality))")
@@ -134,7 +134,7 @@ struct ConditionView: View {
 }
 
 #Preview {
-    let conditions = CurrentWeather.WeatherConditions(id: Double(CurrentWeather.WeatherConditions.RainConditions.moderate.rawValue),
+    let conditions = CurrentWeather.WeatherConditions(id: CurrentWeather.WeatherConditions.RainConditions.moderate.rawValue,
                                                       mainLabel: "Moderate Rain",
                                                       description: "Moderate Rain",
                                                       icon: "")
@@ -152,7 +152,7 @@ struct ConditionView: View {
                                                  humidity: 40.0,
                                                  seaLevel: pressure,
                                                  groundLevel: pressure)
-    return ConditionView(condition: conditions,
+    ConditionView(condition: conditions,
                          mainWeather: mainWeather,
                          locality: "Asheville",
                          isGPSWeather: false,

@@ -72,7 +72,7 @@ struct WindView: View {
                 }
 
                 withAnimation(.bouncy.delay(0.5)) {
-                    self.direction = newValue.cardinalDirection.longLabel
+                    self.direction = newValue.cardinalDirection.stringLabel
                 }
             }
         }
@@ -83,7 +83,7 @@ struct WindView: View {
                     self.gustLevel = wind.gustLevel?.formatted()
                 }
                 withAnimation(.bouncy.delay(0.5)) {
-                    self.direction = wind.cardinalDirection.longLabel
+                    self.direction = wind.cardinalDirection.stringLabel
                 }
             }
         }

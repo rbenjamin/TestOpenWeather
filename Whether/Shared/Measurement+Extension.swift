@@ -64,6 +64,12 @@ extension UnitTemperature {
     }
 }
 
+extension UnitPressure {
+    static func hectopascal(value: Double) -> Measurement<UnitPressure> {
+        Measurement<UnitPressure>(value: value, unit: .hectopascals)
+    }
+}
+
 extension Measurement<UnitTemperature> {
     func formattedWeatherString(width: Measurement<UnitTemperature>.FormatStyle.UnitWidth = .abbreviated,
                                 hidesScale: Bool = false) -> String {

@@ -31,11 +31,6 @@ struct CardinalView: View {
         self.cardinalPointerStrokeColor = cardinalPointerStrokeColor
     }
 
-    private struct KeyframeRotationValues {
-//        var scale = 1.0
-        var rotationAngle = Angle.zero
-    }
-
     private let lineWidth = 2.0
     private let handColor = Color.purple
 
@@ -109,7 +104,6 @@ struct CardinalView: View {
                     withAnimation(.interpolatingSpring.delay(1.25)) {
                         self.handAngle = Angle(degrees: direction.normalizedDegrees())
                         self.windIconAngle = Angle(degrees: direction.normalizedDegrees() - 90)
-
                     }
                 }
             }

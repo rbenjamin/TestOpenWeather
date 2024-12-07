@@ -131,7 +131,6 @@ struct MainWeatherDetails: View {
                     self.humidity = self.percentFormatter.string(from: NSNumber(value: newValue.humidity))!
                     self.pressure = newValue.pressure
 
-                    self.guagePressure = newValue.pressure.converted(to: .hectopascals)
                     self.gaugeTemp = newValue.temperature.converted(to: .celsius)
                 }
             } else {

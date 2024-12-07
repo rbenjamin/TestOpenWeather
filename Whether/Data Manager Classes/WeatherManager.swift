@@ -60,7 +60,7 @@ class WeatherManager: NSObject, ObservableObject {
     /// `updateFromExisting(_:)` is called when user changes locations manually from LocationsList.
     /// Loads the weather location position in the ContentView's scroll view.
     /// - parameter existing: The existing SwiftData WeatherLocation object to be shown.
-
+    @MainActor
     func updateFromExisting(_ existing: WeatherLocation) {
 #if DEBUG
         precondition(mainContext != nil, "MainContext == nil!  Cannot update from existing.")
@@ -74,6 +74,7 @@ class WeatherManager: NSObject, ObservableObject {
     /// Called after user picks a CLPlacemark when adding a new location.  Called by `selectedMarkSink` `sink()` in WeatherManager `init` function. Sets the location details with a location name and coordinates.
     /// - parameter placemark: The placemark the user matched via the search view.
     /// - parameter existing: The weather location to update.
+    @MainActor
     func loadDataUpdateExisting(_ placemark: CLPlacemark, existing: WeatherLocation) {
         guard let location = placemark.location else { return }
 
@@ -86,6 +87,7 @@ class WeatherManager: NSObject, ObservableObject {
     }
 
     /// Called when user taps toolbar button to reload coordinates for the stored GPS location.
+    @MainActor
     func updateGPSLocation() {
         if self.settings.locationEnabled == true {
             self.gpsButtonDisabled = true
@@ -185,6 +187,7 @@ class WeatherManager: NSObject, ObservableObject {
     }
 
     /// Called when `LocationManager` finishes determining coordinates for the GPS location.
+    @MainActor
     func updateFromCLLocation(location: CLLocation) {
         if let oldLocation = self.previouslyRetrievedGPS, location.distance(from: oldLocation) < 1609.344 {
             return

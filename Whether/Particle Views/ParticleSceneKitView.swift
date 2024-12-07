@@ -11,6 +11,7 @@ import SceneKit
 import SwiftUI
 
 struct ParticleSceneKitView: UIViewControllerRepresentable {
+//    @Environment(\.verticalSizeClass) var verticalSizeClass
 
     typealias WeatherEffect = ParticleSettings.WeatherEffect
     typealias WeatherEffectDirection = ParticleSettings.WeatherEffectDirection
@@ -18,8 +19,12 @@ struct ParticleSceneKitView: UIViewControllerRepresentable {
 
     typealias UIViewControllerType = ParticleSceneKitViewController
 
+//    func makeCoordinator() -> Coordinator {
+//      Coordinator(self)
+//    }
     let backgroundColor: UIColor
     let images: [UIImage]
+    let subsystemImage: UIImage
     let effect: WeatherEffect
     var direction: WeatherEffectDirection
     let amount: WeatherEffectAmount
@@ -28,28 +33,37 @@ struct ParticleSceneKitView: UIViewControllerRepresentable {
 
     let tintColor: UIColor?
 
-    init(settings: ParticleSettings, backgroundColor: UIColor) {
+    @Binding var yOffset: Double
+    let verticalSizeClass: UserInterfaceSizeClass?
+    let subsystemSize: CGFloat
+    init(settings: ParticleSettings,
+         backgroundColor: UIColor,
+         yOffset: Binding<Double>,
+         verticalSizeClass: UserInterfaceSizeClass?) {
         let effect = settings.effect
         self.backgroundColor = backgroundColor
         self.effect = effect
         self.direction = settings.direction
         self.amount = settings.amount
-
+        _yOffset = yOffset
+        self.verticalSizeClass = verticalSizeClass
+        self.images = settings.images()
+        self.subsystemImage = settings.subsystemImage()
         switch effect {
         case .snow:
-            self.scale = 0.15
-            self.images = [UIImage(named: "snowflake1")!, UIImage(named: "snowflake2")!, UIImage(named: "snowflake3")!]
+            self.subsystemSize = 0.10
+            self.scale = verticalSizeClass == .regular ? 0.01 : 0.10
             self.tintColor = .white
 
         case .rain(let mist):
             if mist {
-                self.images = [UIImage(named: "Mist")!]
-                self.scale = 0.75
+                self.scale = verticalSizeClass == .regular ? 0.75 : 1.0
                 self.tintColor = .white
+                self.subsystemSize = 1
             } else {
-                self.images = [UIImage(named: "Raindrop")!, UIImage(named: "Raindrop2")!]
-                self.scale = 0.15
+                self.scale = verticalSizeClass == .regular ? 0.15 : 0.65
                 self.tintColor = UIColor(named: "RainColor")
+                self.subsystemSize = verticalSizeClass == .regular ? 1 : 1.4
             }
 
         }
@@ -61,13 +75,38 @@ struct ParticleSceneKitView: UIViewControllerRepresentable {
                                                   images: self.images,
                                                   tintColor: self.tintColor,
                                                   size: self.scale,
+                                                  subsystemSize: self.subsystemSize,
                                                   amount: self.amount)
-          return list
+        list.subsystemImage = self.subsystemImage
+        return list
     }
 
     func updateUIViewController(_ uiViewController: ParticleSceneKitViewController, context: Context) {
+        uiViewController.yOffset = self.yOffset
+        uiViewController.subsystemImage = self.subsystemImage
+        switch self.effect {
+        case .snow:
+            uiViewController.size = self.verticalSizeClass == .regular ? 0.01 : 0.10
+            uiViewController.subsystemSize = 0.10
 
+        case .rain(let mist):
+            if mist {
+                uiViewController.size = self.verticalSizeClass == .regular ? 0.75 : 1.0
+            } else {
+                uiViewController.size = self.verticalSizeClass == .regular ? 0.15 : 0.65
+                uiViewController.subsystemSize = self.verticalSizeClass == .regular ? 1 : 1.4
+
+            }
+        }
     }
+
+//    class Coordinator: ParticleViewControllerDelegate {
+//        var parent: ParticleSceneKitView
+//        
+//        init(_ parent: ParticleSceneKitView) {
+//            self.parent = parent
+//        }
+//    }
 
 }
 
@@ -76,6 +115,37 @@ struct ParticleSettings {
     var direction: WeatherEffectDirection
     var amount: WeatherEffectAmount
     var effect: WeatherEffect
+
+    func subsystemImage() -> UIImage {
+        switch effect {
+        case .snow:
+            return UIImage(named: ["snowflake1", "snowflake2", "snowflake3"].randomElement()!)!
+        case .rain(let mist):
+            if !mist {
+                return UIImage(named: "Raindrop4")!
+            }
+            return UIImage(named: "Mist")!
+        }
+    }
+
+    /** Returns the right image based on `effect` and `amount`.
+     */
+    func images() -> [UIImage] {
+        var images: [UIImage] = []
+        switch effect {
+        case .snow:
+            let fileNames = ["snowflake1", "snowflake2", "snowflake3"]
+            images = [UIImage(named: fileNames.randomElement()!)!]
+        case .rain(let mist):
+            if mist {
+                images = [UIImage(named: "Mist")!]
+            } else {
+                images = [UIImage(named: "Raindrop2")!]
+            }
+
+        }
+        return images
+    }
 
     static func new(rain: CurrentWeather.Rain?,
                     snow: CurrentWeather.Snow?,
@@ -186,6 +256,11 @@ struct ParticleSettings {
     }
 }
 
+struct Collision: OptionSet {
+    let rawValue: Int
+    static let splashEffect = Collision(rawValue: 1 << 0)
+}
+
 class ParticleSceneKitViewController: UIViewController {
 
     typealias WeatherEffect = ParticleSettings.WeatherEffect
@@ -196,15 +271,33 @@ class ParticleSceneKitViewController: UIViewController {
     private var scnScene: SCNScene!
     private var cameraNode: SCNNode!
     private var particleSystem: SCNParticleSystem?
+    // Represents the first UI element -- the particles from `particleSystem` collide with `plane1`, begining the secondary particle effect.
+    private var plane1: SCNNode!
 
     var effect: WeatherEffect
     var images: [UIImage]
+    var subsystemImage: UIImage?
     var size: CGFloat
     var sizeVariation: CGFloat
+    var subsystemSize: CGFloat
     var direction: WeatherEffectDirection = .straightDown
     var amount: WeatherEffectAmount
     var tintColor: UIColor?
     var sceneBackgroundColor: UIColor
+
+    private var planePositionOrigin: Float = 3.05
+
+    var yOffset: CGFloat = 0.0 {
+        didSet {
+            if UITraitCollection.current.verticalSizeClass == .regular {
+                self.plane1.position.y = (Float(self.yOffset) * 0.012) + self.planePositionOrigin
+            } else {
+                self.plane1.position.y = (Float(self.yOffset) * 0.0253) + self.planePositionOrigin
+            }
+        }
+    }
+
+//    weak var delegate: ParticleViewControllerDelegate?
 
     init(effect: WeatherEffect,
          backgroundColor: UIColor,
@@ -212,12 +305,14 @@ class ParticleSceneKitViewController: UIViewController {
          tintColor: UIColor?,
          size: CGFloat = 1.0,
          sizeVariation: CGFloat = 0.25,
+         subsystemSize: CGFloat,
          direction: WeatherEffectDirection = .straightDown,
          amount: WeatherEffectAmount) {
         self.sceneBackgroundColor = backgroundColor
         self.effect = effect
         self.tintColor = tintColor
         self.images = images
+        self.subsystemSize = subsystemSize
         self.size = size
         self.sizeVariation = sizeVariation
         self.direction = direction
@@ -232,14 +327,71 @@ class ParticleSceneKitViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
         setupView()
         setupScene()
+        setupPlane()
+
         setupCamera()
         createAngledEffect(self.effect,
                            size: self.size,
                            sizeVariation: self.sizeVariation,
                            direction: self.direction,
                            amount: self.amount)
+
+    }
+
+    func setupPlane() {
+        let sizeClass = UITraitCollection.current.verticalSizeClass
+        let boxHeight = sizeClass == .regular ? 1.94 : 3.84
+        self.planePositionOrigin = sizeClass == .regular ? 3.05 : 2.48
+
+        let geometry = SCNBox(width: 42, height: boxHeight, length: 1, chamferRadius: 0)
+        plane1 = SCNNode(geometry: geometry)
+        plane1.position = SCNVector3(x: 0, y: self.planePositionOrigin, z: 0)
+        plane1.physicsBody = .static()
+        plane1.physicsBody?.categoryBitMask = Collision.splashEffect.rawValue
+
+        let clearMaterial = SCNMaterial()
+        clearMaterial.diffuse.contents = UIColor.clear
+        geometry.materials = [clearMaterial]
+        scnScene.rootNode.addChildNode(plane1)
+    }
+
+    override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
+        let maxDimension = max(size.width, size.height)
+        var emitterWidth: CGFloat = 10
+        var boxHeight: CGFloat = 1.74
+
+        if maxDimension == size.height {
+
+            self.planePositionOrigin = 3.05
+            self.particleSystem?.speedFactor = 1.2
+        } else if maxDimension == size.width {
+
+            self.planePositionOrigin = 2.48
+            emitterWidth = 18
+            boxHeight = 3.84
+            self.particleSystem?.speedFactor = 1.4
+        }
+
+        if let box = plane1.geometry as? SCNBox {
+            SCNTransaction.begin()
+            SCNTransaction.animationDuration = 0.2
+            box.height = boxHeight
+            SCNTransaction.commit()
+        }
+
+        coordinator.animate { [weak self] _ in
+            guard let `self` = self else { return }
+            self.scnView.setNeedsLayout()
+            self.particleSystem?.emitterShape = SCNBox(width: emitterWidth,
+                                                       height: 0.1,
+                                                       length: 0.1,
+                                                       chamferRadius: 0)
+            self.particleSystem?.particleSize = self.size
+            self.particleSystem?.systemSpawnedOnCollision?.particleSize = self.subsystemSize
+        }
     }
 
     private func createAngledEffect(_ effect: WeatherEffect,
@@ -247,34 +399,25 @@ class ParticleSceneKitViewController: UIViewController {
                                     sizeVariation: CGFloat,
                                     direction: WeatherEffectDirection,
                                     amount: WeatherEffectAmount) {
-        precondition(self.images.isEmpty == false, "ParticleSceneKitViewController.images is empty! Cannot create particle effect.")
+        precondition(self.images.isEmpty == false,
+                     "ParticleSceneKitViewController.images is empty! Cannot create particle effect.")
+        var birthRate: CGFloat = 30.0
         switch amount {
-        case .light:
-            weatherEffect(effect: effect,
-                          image: images[0],
-                          birthRate: 30,
-                          direction: direction)
-        case .regular:
-            let subset = images.prefix(2)
-            for idx in 0 ..< subset.count {
-                weatherEffect(effect: effect,
-                              image: images[idx],
-                              birthRate: 30.0,
-                              direction: direction)
-            }
+        case .light, .regular:
+            birthRate = 30.0
         case .heavy:
-            for image in images {
-                weatherEffect(effect: effect,
-                              image: image,
-                              birthRate: 60.0,
-                              direction: direction)
-            }
+            birthRate = 60.0
+        }
+        for image in self.images {
+            weatherEffect(effect: effect,
+                          image: image,
+                          birthRate: birthRate,
+                          direction: direction)
         }
     }
 
     func setupView() {
         self.view.backgroundColor = self.sceneBackgroundColor
-        print("Particle SceneKit View canBecomeFocused: \(self.view.canBecomeFocused)")
         let view = SCNView(frame: self.view.bounds)
         self.scnView = view
         view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -290,7 +433,6 @@ class ParticleSceneKitViewController: UIViewController {
         scnScene = SCNScene()
         scnScene.background.contents = self.sceneBackgroundColor
         scnView.scene = scnScene
-
     }
 
     func setupCamera() {
@@ -327,26 +469,6 @@ class ParticleSceneKitViewController: UIViewController {
         default:
             return 0
         }
-//        switch effect {
-//        case .rain:
-//        switch direction {
-//        case .angleRight:
-//            return 15
-//        case .angleRightHard:
-//            return 30
-//        case .angleLeft:
-//            return -15
-//        case .angleLeftHard:
-//            return -30
-//        default:
-//            return 0
-//        }
-//        default:
-//            if case WeatherEffectDirection.leftToRight = direction {
-//                return 30
-//            }
-//            return 68.7
-//        }
     }
 
     /** Uses the `WeatherEffect` enum and `WeatherEffectDirection` enum to build a tuple containing the acceleration speed and emitter position for the Scene Kit Particle Effect.  We move the emitter position based on direction so that even if the effect slants to the right or left we still have the majority of the view window being filled by the effect.
@@ -399,7 +521,9 @@ class ParticleSceneKitViewController: UIViewController {
         particleSystem.birthLocation = .volume
         particleSystem.isLocal = false  // Emit in world space
         // Create wide, thin emitter shape to cover screen width
-        let emitterWidth: CGFloat = 10  // Adjust based on your needs
+        let orientation = UITraitCollection.current.verticalSizeClass
+
+        let emitterWidth: CGFloat = orientation == .regular ? 10 : 18
         particleSystem.emitterShape = SCNBox(width: emitterWidth,
                                            height: 0.1,
                                            length: 0.1,
@@ -411,7 +535,9 @@ class ParticleSceneKitViewController: UIViewController {
         particleSystem.particleSizeVariation = self.sizeVariation
         particleSystem.particleLifeSpanVariation = 2
 
-        particleSystem.particleColor = self.tintColor ?? UIColor.white
+        let color = self.tintColor ?? UIColor.white
+
+        particleSystem.particleColor = color
         switch effect {
         case .rain(let mist):
             if !mist {
@@ -444,8 +570,58 @@ class ParticleSceneKitViewController: UIViewController {
         particleSystem.blendMode = .alpha
         particleSystem.isLightingEnabled = false
         particleSystem.orientationMode = .billboardScreenAligned
+        particleSystem.colliderNodes = [plane1]
+        particleSystem.systemSpawnedOnCollision = self.splashEffect(image: self.subsystemImage ?? image,
+                                                                    size: self.subsystemSize,
+                                                                    color: color,
+                                                                    birthRate: 4)
+        particleSystem.particleDiesOnCollision = true
+
         // Add particle system to scene
         scnScene.addParticleSystem(particleSystem, transform: emitterPosition)
+
+    }
+    func splashEffect(image: UIImage,
+                      size: CGFloat = 0.08,
+                      color: UIColor,
+                      birthRate: CGFloat = 2) -> SCNParticleSystem {
+        let particleSystem = SCNParticleSystem()
+
+        // Emission properties
+        particleSystem.birthRate = birthRate
+        particleSystem.idleDuration = 4
+        particleSystem.idleDurationVariation = 0.5
+        particleSystem.warmupDuration = 2
+        particleSystem.birthLocation = .vertex
+        particleSystem.isLocal = false  // Emit in world space
+
+        particleSystem.emitterShape = SCNBox(width: 42, height: 1.84, length: 1, chamferRadius: 0)
+
+        // Particle properties
+        particleSystem.particleLifeSpan = 8
+        particleSystem.particleLifeSpanVariation = 1
+        particleSystem.particleVelocity = 0
+
+        particleSystem.particleDiesOnCollision = false
+        particleSystem.emittingDirection = SCNVector3(0, -2, 0)
+        // Initial spread
+        particleSystem.spreadingAngle = 0
+        particleSystem.stretchFactor = 0
+        particleSystem.particleAngle = 0
+
+        particleSystem.isAffectedByGravity = true
+        particleSystem.particleMass = 3.0
+        particleSystem.dampingFactor = 0.90
+        particleSystem.particleImage = image
+        particleSystem.particleColor = color
+        particleSystem.particleSize = size
+
+        // Rendering properties
+        particleSystem.blendMode = .alpha
+        particleSystem.isLightingEnabled = false
+        particleSystem.orientationMode = .billboardViewAligned
+        particleSystem.loops = false
+        return particleSystem
 
     }
 

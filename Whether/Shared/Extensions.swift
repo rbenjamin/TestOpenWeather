@@ -29,12 +29,6 @@ extension NumberFormatter {
 }
 
 extension CGPoint {
-    init(angle: SwiftUI.Angle, hypothenuse: CGFloat) {
-        self.init(
-            x: Double.adjacent(angle: angle, hypothenuse: hypothenuse),
-            y: Double.opposite(angle: angle, hypothenuse: hypothenuse)
-        )
-    }
 
     static func + (lhs: CGPoint, rhs: CGPoint) -> CGPoint {
         var rhs = rhs

@@ -8,6 +8,9 @@
 import Foundation
 import CoreLocation
 
+typealias ForecastList = Forecast.ForecastList
+
+
 struct Forecast: WeatherData, Identifiable, Codable, Equatable, Hashable, CustomStringConvertible {
 
     public static func decodeWithData(_ data: Data?, decoder: JSONDecoder? = .init()) async throws -> Forecast? {
@@ -15,7 +18,7 @@ struct Forecast: WeatherData, Identifiable, Codable, Equatable, Hashable, Custom
             print("WeatherManager.decodeWeather(_:) failed - `data` is nil.")
             return nil
         }
-
+        decoder?.dateDecodingStrategy = .secondsSince1970
         return try decoder!.decode(Forecast.self, from: data)
     }
 
@@ -37,7 +40,7 @@ struct Forecast: WeatherData, Identifiable, Codable, Equatable, Hashable, Custom
                 // we have the closest *time* to the current:
                 // E.g., if today @ 5:00 PM we check the weather for the week,
                 // the weather for the week will be from within the 5:00 PM 3 hour window.
-                let newDate = Calendar.current.copyComponents([.day, .month, .year, .yearForWeekOfYear],
+            let newDate = Calendar.current.copyComponents([.day, .month],
                                                               fromDate: current,
                                                               toDate: date)!
 
@@ -48,8 +51,6 @@ struct Forecast: WeatherData, Identifiable, Codable, Equatable, Hashable, Custom
                 // forecasts on the same day when two forecasts are both within 3 hours.
                 // By equalizing the time, we can use a Set to validate that we only add one forecast per date.
                 let equalTime = Calendar.current.date(bySettingHour: 1, minute: 0, second: 0, of: date)!
-
-                // Fix the year -- OpenWeather doesn't return the current year.
 
                 // Determine if the difference in hours is <= 3
 
@@ -187,18 +188,8 @@ struct Forecast: WeatherData, Identifiable, Codable, Equatable, Hashable, Custom
         }
         init(from decoder: any Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
-
-            let decodeDate = try container.decode(Date.self, forKey: CodingKeys.forecastDate)
-
-            /// Ensure the `ForecastList` `forecastDate` year is correct:
-            /// The year isn't set by `OpenWeather` so we need to update the incoming date.
-            let current = Date()
-            let currComps = Calendar.current.dateComponents([.year, .yearForWeekOfYear], from: current)
-            var forecastComps = Calendar.current.dateComponents(in: TimeZone.current, from: decodeDate)
-            forecastComps.year = currComps.year
-            forecastComps.yearForWeekOfYear = currComps.yearForWeekOfYear
-            let newDate = Calendar.current.date(from: forecastComps)!
-            self.forecastDate = newDate
+            // Be sure dateDecodingStrategy is set to secondsSince1970
+            self.forecastDate = try container.decode(Date.self, forKey: CodingKeys.forecastDate)
 
             self.main = try container.decode(CurrentWeather.MainWeather.self, forKey: CodingKeys.main)
             let conditions = try container.decode(Array<CurrentWeather.WeatherConditions>.self, forKey: .conditions)

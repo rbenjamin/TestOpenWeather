@@ -107,10 +107,6 @@ final class WeatherLocation: CustomStringConvertible {
         // if so, and `force = false`, we simply return the most recent data, decoded.
         switch type {
         case .now:
-            if !force, let recent = weatherDownloadDate {
-                let distance = recent.distance(to: date)
-                print("time intervals since last weather download for \(self.locationName): \(distance)")
-            }
             if force == false, let recent = weatherDownloadDate,
                 recent.distance(to: date) < 600,
                 let data = self.weatherData {
@@ -118,10 +114,6 @@ final class WeatherLocation: CustomStringConvertible {
                                                                decoder: decoder)
             }
         case .pollution:
-            if !force, let recent = pollutionDownloadDate {
-                let distance = recent.distance(to: date)
-                print("time intervals since last weather download for \(self.locationName): \(distance)")
-            }
             if force == false,
                 let recent = pollutionDownloadDate,
                 recent.distance(to: date) < 600,
@@ -130,10 +122,6 @@ final class WeatherLocation: CustomStringConvertible {
                                                           decoder: decoder)
             }
         case .fiveDay:
-            if !force, let recent = forecastDownloadDate {
-                let distance = recent.distance(to: date)
-                print("time intervals since last weather download for \(self.locationName): \(distance)")
-            }
             if force == false,
                 let recent = forecastDownloadDate,
                 recent.distance(to: date) < 600,
@@ -166,7 +154,6 @@ final class WeatherLocation: CustomStringConvertible {
 
             }
             /// 5) Begin the download
-
             guard let data = try await manager.download(url: url) else {
                 print("data is nil!")
                 return nil
@@ -177,12 +164,15 @@ final class WeatherLocation: CustomStringConvertible {
                 NotificationCenter.default.post(name: .networkingOff, object: nil)
                 self.updateWithData(data, downloadDate: date, type: type)
             }
-
             return try await self.decodeDataForType(data, type: type, decoder: decoder)
 
         } catch let error as NSError {
             Task { @MainActor in
                 NotificationCenter.default.post(name: .networkingOff, object: nil)
+            }
+            if let error = error as? DecodingError {
+                // Since we have two throwing function calls within the `do` statement, we need to check whether the error is a URLSession related error or a DecodingError.  If it's a decoding error, we will be able to cast the error as a `DecodingError`.
+                throw DownloadError.decodeFailed(type: type, location: self, error: error)
             }
             throw DownloadError.downloadFailed(type: type,
                                                location: self,

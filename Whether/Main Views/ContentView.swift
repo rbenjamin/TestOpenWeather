@@ -15,6 +15,7 @@ struct ContentView: View {
     }
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     let settings = Settings.shared
 
@@ -129,7 +130,6 @@ struct ContentView: View {
                 self.visibleLocation = newValue
             }
         }
-
     }
 
     @ViewBuilder
@@ -157,8 +157,8 @@ struct ContentView: View {
                     }
                 })
                 .environment(\.modelContext, self.modelContext)
-                .safeAreaPadding([.leading, .trailing], 4)
-                .containerRelativeFrame(.horizontal, count: 1, spacing: 0)
+                .safeAreaPadding([.leading, .trailing], self.verticalSizeClass == .regular ? 4 : 36)
+                .containerRelativeFrame([.horizontal, .vertical], count: 1, spacing: 0)
                 .frame(maxHeight: .infinity)
                 .id(locations[idx])
             }
@@ -172,29 +172,28 @@ struct ContentView: View {
                 ScrollView([.horizontal]) {
                     self.scrollContent(proxy: proxy)
                         .scrollTargetLayout()
-
-                    .onChange(of: self.visibleLocation, { old, new in
-                        if old != new, let new {
-                            if new != self.weatherManager.currentWeatherLocation {
-                                self.weatherManager.currentWeatherLocation = new
+                        .onChange(of: self.visibleLocation, { old, new in
+                            if old != new, let new {
+                                if new != self.weatherManager.currentWeatherLocation {
+                                    self.weatherManager.currentWeatherLocation = new
+                                }
+                                self.locality = new.locationName ?? "Unknown Location"
+                                self.settings.setDefaultLocationID(new.persistentModelID,
+                                                                   encoder: self.weatherManager.encoder)
+                            } else if new == nil {
+                                self.locality = "Unknown Location"
                             }
-                            self.locality = new.locationName ?? "Unknown Location"
-                            self.settings.setDefaultLocationID(new.persistentModelID,
-                                                               encoder: self.weatherManager.encoder)
-                        } else if new == nil {
-                            self.locality = "Unknown Location"
-                        }
-                    })
-                    .onChange(of: self.weatherManager.currentWeatherLocation, { old, new in
-                        if old != new, let new {
-                            withAnimation {
-                                proxy.scrollTo(new)
+                        })
+                        .onChange(of: self.weatherManager.currentWeatherLocation, { old, new in
+                            if old != new, let new {
+                                withAnimation {
+                                    proxy.scrollTo(new)
+                                }
+                                if new != self.visibleLocation {
+                                    self.visibleLocation = new
+                                }
                             }
-                            if new != self.visibleLocation {
-                                self.visibleLocation = new
-                            }
-                        }
-                    })
+                        })
                 }
                 .background {
                     self.backgroundColor
@@ -203,8 +202,6 @@ struct ContentView: View {
                 .scrollPosition(id: self.$visibleLocation, anchor: .center)
             })
             .frame(maxHeight: .infinity)
-            .ignoresSafeArea()
-
             .toolbar {
                 self.toolbarContent
             }
@@ -213,6 +210,8 @@ struct ContentView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(self.backgroundColor, for: .navigationBar)
             .navigationBarTitleDisplayMode(.inline)
+            .ignoresSafeArea(.container, edges: [.leading, .trailing, .bottom])
+
             .sheet(isPresented: $presentList,
                    content: {
                 LocationsList(dismiss: self.$presentList,

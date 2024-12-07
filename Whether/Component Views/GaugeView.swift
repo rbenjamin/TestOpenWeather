@@ -24,7 +24,7 @@ import SwiftUI
  - Ensure the provided `range` and `value` are both the same measurement system.
  
  ## Notes: ##
- 1. Some of the design code for this view is modified based on project https://github.com/kkla320/GaugeProgressViewStyle by `kkla320` on GitHub.
+ 1. Some of the design code for this view is modified based on project https://github.com/kkla320/GaugeProgressViewStyle by ``kkla320`` on GitHub.
  */
 
 struct GaugeView<UnitType: Unit, FillShape: ShapeStyle & View>: View {
@@ -86,8 +86,11 @@ struct GaugeView<UnitType: Unit, FillShape: ShapeStyle & View>: View {
             let minSide = min(size.width, size.height) / 2
             let hypothenuse = (minSide - widthOffset)
 
-            var topRight = CGPoint(angle: angle,
-                                   hypothenuse: hypothenuse)
+            let xPoint = cos(angle.radians) * hypothenuse
+            let yPoint = sin(angle.radians) * hypothenuse
+
+            var topRight = CGPoint(x: xPoint, y: yPoint)
+
             topRight.x += offset
 
             let width = abs(topRight.x)
@@ -110,6 +113,7 @@ struct GaugeView<UnitType: Unit, FillShape: ShapeStyle & View>: View {
 
             let radius = min(rect.size.width, rect.size.height) / 2
             let center = CGPoint(x: rect.midX, y: rect.midY)
+            let hypotenuse = (radius - (insetSize / 2))
 
             var path = Path()
             // Top-curve from left to right
@@ -120,8 +124,9 @@ struct GaugeView<UnitType: Unit, FillShape: ShapeStyle & View>: View {
                         clockwise: false)
 
             // Rounded corner (right side)
-            var point = center + CGPoint(angle: endAngle,
-                                         hypothenuse: (radius - (insetSize / 2)))
+            var point = center
+            point.x += cos(endAngle.radians) * hypotenuse
+            point.y += sin(endAngle.radians) * hypotenuse
 
             path.addArc(center: point,
                         radius: insetSize / 2,
@@ -136,9 +141,10 @@ struct GaugeView<UnitType: Unit, FillShape: ShapeStyle & View>: View {
                         endAngle: startAngle,
                         clockwise: true)
 
-            // Rounded corner (left side)
-            point = center + CGPoint(angle: startAngle,
-                                     hypothenuse: (radius - (insetSize / 2)))
+            point = center
+            point.x += cos(startAngle.radians) * hypotenuse
+            point.y += sin(startAngle.radians) * hypotenuse
+//            var point = CGPoint(x: x, y: y)
 
             path.addArc(center: point,
                         radius: insetSize / 2,
@@ -180,14 +186,18 @@ struct GaugeView<UnitType: Unit, FillShape: ShapeStyle & View>: View {
             GeometryReader { proxy in
                 let minSide = min(proxy.size.width, proxy.size.height) / 2
                 let radius = self.diameter / 2
+                let hypotenuse = (minSide - radius)
+
+                let xPoint = cos(self.angle.radians) * hypotenuse
+                let yPoint = sin(self.angle.radians) * hypotenuse
 
                 Circle()
                     .stroke(self.stroke, style: self.strokeStyle)
                     .fill(self.fill, style: self.fillStyle)
                     .frame(width: self.diameter - self.strokeStyle.lineWidth - inset,
                            height: self.diameter - self.strokeStyle.lineWidth - inset)
-                    .offset(x: CGPoint(angle: self.angle, hypothenuse: (minSide - radius)).x,
-                            y: CGPoint(angle: self.angle, hypothenuse: (minSide - radius)).y)
+                    .offset(x: xPoint,
+                            y: yPoint)
                     .frame(width: proxy.size.width,
                            height: proxy.size.height)
             }

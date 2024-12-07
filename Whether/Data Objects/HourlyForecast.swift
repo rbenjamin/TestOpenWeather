@@ -19,6 +19,7 @@ struct HourlyForecast: Identifiable, Codable, Equatable, Hashable {
             print("WeatherManager.decodeWeather(_:) failed - `data` is nil.")
             return nil
         }
+        decoder?.dateDecodingStrategy = .secondsSince1970
 
         return try decoder!.decode(HourlyForecast.self, from: data)
 

@@ -20,14 +20,20 @@ struct TemperatureGauge: View {
         var angle = Angle.zero
     }
 
+    private enum GaugeDirection {
+        case horizontal
+        case vertical
+    }
+
     @Binding var temperature: Measurement<UnitTemperature>?
     let width: Double
     let height: Double
+    private let direction: GaugeDirection
     @State private var rotationAngle: Double = 0.0
     @State private var condition: CurrentWeather.ConditionModifier?
     @State private var animationTimeout: Bool = false
     @State private var accessibilityValue = ""
-    let range = Measurement<UnitTemperature>(value: -30, unit: .celsius) ... Measurement<UnitTemperature>(value: 50, unit: .celsius)
+    let range = UnitTemperature.celcius(value: -30) ... UnitTemperature.celcius(value: 50)
 
     /** Initializes `TemperatureGauge` as a *verticle* gauge, with height determined by the  containing view and with width specified here.
      
@@ -39,6 +45,7 @@ struct TemperatureGauge: View {
         _temperature = temperature
         self.width = width
         self.height = 0.0
+        self.direction = .vertical
     }
 
     /** Initializes `TemperatureGauge` as a *horizontal* gauge, with width determined by the  containing view and with height specified here.
@@ -52,35 +59,41 @@ struct TemperatureGauge: View {
 
         self.height = height
         self.width = 0.0
+        self.direction = .horizontal
+    }
+
+    func transition(_ edge: Edge) -> AnyTransition {
+        return .push(from: edge).combined(with: .opacity)
     }
 
     var body: some View {
         GeometryReader { proxy in
-            RoundedRectangle(cornerRadius: self.height == 0 ? self.width / 2  : self.height / 2)
+            let midWidth = direction == .horizontal ? (0) : width / 2
+            let midHeight = direction == .vertical ? (0) : height / 2
+
+            RoundedRectangle(cornerRadius: self.direction == .vertical ? midWidth  : midHeight)
                      .stroke(Color.white, lineWidth: 1.0)
                      .frame(maxHeight: .infinity)
                      .frame(width: self.height == 0 ? self.width : nil,
                             height: self.width == 0 ? self.height : nil)
                      .background {
 
-                    if self.height == 0 {
+                    if self.direction == .vertical {
                         LinearGradient(colors: self.gradientValues,
                                        startPoint: .top,
                                        endPoint: .bottom)
-                        .clipShape(RoundedRectangle(cornerRadius: self.height == 0 ? self.width / 2 : self.height / 2))
+                        .clipShape(RoundedRectangle(cornerRadius: self.direction == .vertical ? midWidth : midHeight))
                     } else {
                         LinearGradient(colors: self.gradientValues,
                                        startPoint: .leading,
                                        endPoint: .trailing)
-                        .clipShape(RoundedRectangle(cornerRadius: self.height == 0 ? self.width / 2 : self.height / 2))
+                        .clipShape(RoundedRectangle(cornerRadius: self.direction == .vertical ? midWidth : midHeight))
                     }
                 }
                 .overlay {
                     // Show the current temperature indicator if we have a temperature:
                     // Otherwise, show an activity indicator (ProgressView)
                     let size = proxy.size
-                    let midWidth = width == 0 ? (0) : width / 2
-                    let midHeight = height == 0 ? (0) : height / 2
 
                     if let temp = self.temperature {
                         let origin = position(in: size, temperature: temp)
@@ -88,17 +101,23 @@ struct TemperatureGauge: View {
                         Circle()
                             .stroke(Color.white, style: StrokeStyle(lineWidth: 1))
                             .fill(.white.opacity(0.60))
-                            .frame(width: self.height == 0 ? self.width : midHeight,
-                                   height: self.height == 0 ? midWidth : self.height,
+                            .frame(width: self.direction == .vertical ? self.width : midHeight,
+                                   height: self.direction == .vertical ? midWidth : self.height,
                                    alignment: .center)
-                            .position(x: self.width == 0 ? origin.x + (midHeight / 2) : midWidth,
-                                      y: self.height == 0 ? origin.y + (midWidth / 2) : midHeight)
-                            .transition(self.width == 0 ? .push(from: .leading).combined(with: .opacity) : .push(from: .top).combined(with: .opacity))
+                            .position(x: self.direction == .horizontal ? origin.x + (midHeight / 2) : midWidth,
+                                      y: self.direction == .vertical ? origin.y + (midWidth / 2) : midHeight)
+                            .transition(self.transition(self.width == 0 ? .leading : .top))
                     } else if self.animationTimeout == false {
                         let minSide = min(size.width, size.height) - 4.0
+                        let halfMinSide = minSide / 2
 
                         let origin = position(in: size,
                                               temperature: self.range.lowerBound)
+                        let quarterW = midWidth / 2
+                        let quarterH = midHeight / 2
+                        let offset = self.direction == .horizontal ? origin.x + 2.0 : origin.y + 2.0
+                        let xPos = self.direction == .horizontal ? offset + quarterH + halfMinSide : midWidth + 0.5
+                        let yPos = self.direction == .vertical ? offset + quarterW + halfMinSide : midHeight + 0.5
                         HStack(spacing: 0) {
                             CircularPillShape(startAngle: .degrees(90),
                                               endAngle: .degrees(270),
@@ -121,20 +140,20 @@ struct TemperatureGauge: View {
                         .frame(width: minSide,
                                height: minSide,
                                alignment: .center)
-                        .position(x: self.width == 0 ? origin.x + 2.0 + (midHeight / 2) + (minSide / 2) : midWidth + 0.5,
-                                  y: self.height == 0 ? origin.y + 2.0 + (midWidth / 2) + (minSide / 2) : midHeight + 0.5)
+                        .position(x: xPos,
+                                  y: yPos)
                     }
                 }
+                .clipShape(RoundedRectangle(cornerRadius: self.direction == .vertical ? midWidth  : midHeight))
         }
-        .frame(width: self.width == 0 ? nil : self.width)
-        .frame(height: self.height == 0 ? nil : self.height)
+        .frame(width: direction == .horizontal ? nil : self.width)
+        .frame(height: direction == .vertical ? nil : self.height)
         .accessibilityLabel(Text("Temperature Gauge"))
         .accessibilityValue(Text(self.accessibilityValue))
         .onChange(of: self.temperature) { oldValue, newValue in
             if let newValue, newValue != oldValue {
                 self.condition = CurrentWeather.ConditionModifier(temperature: newValue.converted(to: .kelvin).value)
-//                self.accessibilityValue = newValue.converted(to: .).formatted(.measurement(width: .abbreviated, usage: .asProvided))
-                let converted: Measurement<UnitTemperature> = newValue.converted(to: UnitTemperature(forLocale: .current, usage: .weather))
+                let converted = newValue.converted(to: UnitTemperature(forLocale: .current, usage: .weather))
                 self.accessibilityValue = converted.formattedWeatherString()
 
             }
@@ -145,21 +164,19 @@ struct TemperatureGauge: View {
             }
             if let temperature {
                 self.accessibilityValue = temperature.formatted(.measurement(width: .abbreviated, usage: .asProvided))
-
             }
-//            withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
-//                self.rotationAngle = 360.0
-//            }
         }
     }
     /// `normalize(_:, range:)` converts the temperature value between `range` into a value between 0 and 1; this way it can be used to determine the position of the overlay.
-    private func normalize(_ value: Double, range: ClosedRange<Measurement<UnitTemperature>>) -> Double {
+    private func normalize(_ value: Double,
+                           range: ClosedRange<Measurement<UnitTemperature>>) -> Double {
         let (min, max) = (range.lowerBound.value, range.upperBound.value)
         if max - min == 0 { return 1 }
         return (value - min) / (max - min)
     }
 
-    func position(in size: CGSize, temperature: Measurement<UnitTemperature>) -> CGPoint {
+    func position(in size: CGSize,
+                  temperature: Measurement<UnitTemperature>) -> CGPoint {
         var tempValue = temperature.converted(to: .celsius).value
         tempValue = min(max(tempValue, self.range.lowerBound.value), self.range.upperBound.value)
         tempValue = normalize(tempValue, range: self.range)

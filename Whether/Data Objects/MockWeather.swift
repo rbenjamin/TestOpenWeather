@@ -6,17 +6,42 @@
 //
 
 import Foundation
+import CoreLocation
+
+struct MockWeatherValue {
+    let mainWeather: CurrentWeather.MainWeather
+    let conditions: CurrentWeather.WeatherConditions
+    init(tempF: Double,
+         pressure: CurrentWeather.MainWeather.PressureConditions,
+         humidity: Double,
+         conditions: (any WeatherIDEnum)) {
+
+        let temp = UnitTemperature.fahrenheit(value: tempF)
+        let pressure = UnitPressure.hectopascal(value: pressure.mockPressureValue())
+        self.mainWeather = CurrentWeather.MainWeather(temperature: temp,
+                                                      feelsLike: temp,
+                                                      minTemp: temp,
+                                                      maxTemp: temp,
+                                                      pressure: pressure,
+                                                      humidity: humidity,
+                                                      seaLevel: pressure,
+                                                      groundLevel: pressure)
+
+        self.conditions = .init(id: conditions.rawValue,
+                                mainLabel: conditions.stringLabel,
+                                description: conditions.stringLabel,
+                                icon: "")
+    }
+}
 
 // MARK: - Mock Values -
 
 extension Pollution {
 
-    #if DEBUG
     /// `UI Testing`
     static func mockPollution(date: Date, quality: Readings.AirQualityReading) -> Pollution {
         return Pollution(readings: [Readings.mockReadings(date: date, airQuality: quality)])
     }
-    #endif
 
 }
 
@@ -37,7 +62,7 @@ extension Pollution.Readings {
         NO: min value 0.1 - max value 100
 
      */
-    #if DEBUG
+
     /// `UI Testing`
     static func mockReadings(date: Date,
                              airQuality: AirQualityReading) -> Pollution.Readings {
@@ -96,12 +121,10 @@ extension Pollution.Readings {
                                   qualityState: airQuality,
                                   components: finalComps)
     }
-    #endif
 
 }
 
 extension CurrentWeather.Wind {
-    #if DEBUG
     /// `UI Testing`
     static func mockWindWithCategory(_ category: WindSpeedCategory, direction: WindDirection) -> CurrentWeather.Wind {
         var speed: Double = 0.0
@@ -129,6 +152,98 @@ extension CurrentWeather.Wind {
                                    direction: trueDirection,
                                    gustLevel: UnitSpeed.metersPerSecond(gustLevel))
     }
-    #endif
 
+}
+
+extension CurrentWeather.MainWeather.PressureConditions {
+    
+    func mockPressureValue() -> Double {
+        switch self {
+        case .veryLow:
+            return 970.0
+//            return UnitPressure.hectopascal(value: 970)
+        case .low:
+            return 990.5
+//            return UnitPressure.hectopascal(value: 990.5)
+        case .belowNormal:
+            return 1005.5
+//            return UnitPressure.hectopascal(value: 1005.5)
+        case .normal:
+            return 1015.5
+//            return UnitPressure.hectopascal(value: 1015.5)
+        case .high:
+            return 1021.0
+//            return UnitPressure.hectopascal(value: 1021)
+        }
+    }
+}
+
+extension CurrentWeather {
+    static func mockWeather(date: Date,
+                            value: MockWeatherValue,
+                            windCategory: Wind.WindSpeedCategory,
+                            windDirection: Wind.WindDirection,
+                            cloudCover: Double,
+                            rainOneHour: Measurement<UnitLength>?,
+                            snowOneHour: Measurement<UnitLength>?) -> CurrentWeather {
+        let current = Calendar.current
+        let position = CurrentWeather.Position.init(longitude: CLLocationDegrees(38.82132),
+                                                     latitude: CLLocationDegrees(82.77531))
+        let sunrise = current.date(bySettingHour: 6, minute: 41, second: 0, of: date)!
+        let sunset = current.date(bySettingHour: 19, minute: 30, second: 0, of: date)!
+        let wind = CurrentWeather.Wind.mockWindWithCategory(windCategory, direction: windDirection)
+        let system = CurrentWeather.System.init(country: "us", sunrise: sunrise, sunset: sunset)
+
+        let weather = CurrentWeather(position: position,
+                                     conditions: [],
+                                     mainWeather: value.mainWeather,
+                                     wind: wind,
+                                     clouds: CurrentWeather.Clouds(cloudiness: 0.50),
+                                     rain: CurrentWeather.Rain(oneHour: rainOneHour, threeHour: nil),
+                                     snow: CurrentWeather.Snow(oneHour: snowOneHour, threeHour: nil),
+                                     visibility: 1.0,
+                                     system: system,
+                                     timeZone: Double(-28800.0),
+                                     code: 0)
+        return weather
+    }
+}
+
+extension Forecast.ForecastList {
+
+    static func mockForecast(date: Date,
+                             value: MockWeatherValue) -> Forecast.ForecastList {
+        return Forecast.ForecastList(forecastDate: date,
+                                     main: value.mainWeather,
+                                     conditions: [value.conditions],
+                                     visibility: nil,
+                                     precipitation: 0.0,
+                                     dateString: date.formatted(date: .abbreviated, time: .shortened))
+    }
+
+    static func mockListStartingFrom(date: Date,
+                                     mockValues: [MockWeatherValue]) -> [Forecast.ForecastList]? {
+
+        var forecastList = [Forecast.ForecastList]()
+
+        let calendar = Calendar.current
+        guard mockValues.count == 5 else { return nil }
+        for dayIndex in 1 ... 5 {
+            guard let nextDate = calendar.date(byAdding: .day,
+                                               value: dayIndex,
+                                               to: date,
+                                               wrappingComponents: false) else {
+                return nil
+            }
+            let list = Forecast.ForecastList(forecastDate: nextDate,
+                                             main: mockValues[dayIndex - 1].mainWeather,
+                                             conditions: [mockValues[dayIndex - 1].conditions],
+                                             visibility: nil,
+                                             precipitation: 0.0,
+                                             dateString: nextDate.formatted(date: .abbreviated, time: .shortened))
+            forecastList.append(list)
+
+        }
+        return forecastList
+    }
 }

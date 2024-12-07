@@ -27,11 +27,15 @@ public enum WeatherDataType: Int, CustomStringConvertible {
     }
 }
 
-protocol WeatherIDEnum {
+protocol WeatherIDEnum: RawRepresentable where RawValue == Int {
     var stringLabel: String { get }
 }
 
 protocol WeatherData: Identifiable, Codable, Equatable, Hashable {}
+
+typealias MainWeather = CurrentWeather.MainWeather
+
+typealias WeatherConditions = CurrentWeather.WeatherConditions
 
 struct CurrentWeather: WeatherData, Identifiable, Codable, Hashable, Equatable {
 
@@ -91,7 +95,7 @@ struct CurrentWeather: WeatherData, Identifiable, Codable, Hashable, Equatable {
         self.timeZone = timeZone
         self.code = code
     }
-    
+
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.timeZone = try container.decode(Double.self, forKey: .timeZone)
@@ -131,7 +135,7 @@ struct CurrentWeather: WeatherData, Identifiable, Codable, Hashable, Equatable {
             print("WeatherManager.decodeWeather(_:) failed - `data` is nil.")
             return nil
         }
-
+        decoder?.dateDecodingStrategy = .secondsSince1970
         do {
             return (try decoder!.decode(CurrentWeather.self, from: data))
         } catch let error {

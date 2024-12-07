@@ -12,6 +12,7 @@ struct Pollution: WeatherData, CustomStringConvertible {
             print("WeatherManager.decodeWeather(_:) failed - `data` is nil.")
             return nil
         }
+        decoder?.dateDecodingStrategy = .secondsSince1970
 
         return try decoder!.decode(Pollution.self, from: data)
     }
