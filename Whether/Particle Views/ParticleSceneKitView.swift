@@ -36,6 +36,8 @@ struct ParticleSceneKitView: UIViewControllerRepresentable {
     @Binding var yOffset: Double
     let verticalSizeClass: UserInterfaceSizeClass?
     let subsystemSize: CGFloat
+    var useSubsystem: Bool = true
+
     init(settings: ParticleSettings,
          backgroundColor: UIColor,
          yOffset: Binding<Double>,
@@ -54,18 +56,22 @@ struct ParticleSceneKitView: UIViewControllerRepresentable {
             self.subsystemSize = 0.10
             self.scale = verticalSizeClass == .regular ? 0.01 : 0.10
             self.tintColor = .white
-
-        case .rain(let mist):
-            if mist {
-                self.scale = verticalSizeClass == .regular ? 0.75 : 1.0
-                self.tintColor = .white
-                self.subsystemSize = 1
-            } else {
-                self.scale = verticalSizeClass == .regular ? 0.15 : 0.65
-                self.tintColor = UIColor(named: "RainColor")
-                self.subsystemSize = verticalSizeClass == .regular ? 1 : 1.4
-            }
-
+            self.useSubsystem = true
+        case .rain:
+            self.scale = verticalSizeClass == .regular ? 0.15 : 0.65
+            self.tintColor = UIColor(named: "RainColor")
+            self.subsystemSize = verticalSizeClass == .regular ? 1 : 1.4
+            self.useSubsystem = true
+        case .mist:
+            self.scale = verticalSizeClass == .regular ? 0.75 : 1.0
+            self.tintColor = .white
+            self.subsystemSize = 1
+            self.useSubsystem = false
+        case .fog:
+            self.scale = 3.0
+            self.tintColor = .white
+            self.useSubsystem = false
+            self.subsystemSize = 1
         }
     }
 
@@ -76,28 +82,30 @@ struct ParticleSceneKitView: UIViewControllerRepresentable {
                                                   tintColor: self.tintColor,
                                                   size: self.scale,
                                                   subsystemSize: self.subsystemSize,
-                                                  amount: self.amount)
+                                                  amount: self.amount,
+                                                  useSubsystem: self.useSubsystem)
         list.subsystemImage = self.subsystemImage
+        list.direction = self.direction
         return list
     }
 
     func updateUIViewController(_ uiViewController: ParticleSceneKitViewController, context: Context) {
         uiViewController.yOffset = self.yOffset
         uiViewController.subsystemImage = self.subsystemImage
+        uiViewController.direction = self.direction
         switch self.effect {
         case .snow:
             uiViewController.size = self.verticalSizeClass == .regular ? 0.01 : 0.10
             uiViewController.subsystemSize = 0.10
-
-        case .rain(let mist):
-            if mist {
-                uiViewController.size = self.verticalSizeClass == .regular ? 0.75 : 1.0
-            } else {
-                uiViewController.size = self.verticalSizeClass == .regular ? 0.15 : 0.65
-                uiViewController.subsystemSize = self.verticalSizeClass == .regular ? 1 : 1.4
-
-            }
+        case .rain:
+            uiViewController.size = self.verticalSizeClass == .regular ? 0.15 : 0.65
+            uiViewController.subsystemSize = self.verticalSizeClass == .regular ? 1 : 1.4
+        case .mist:
+            uiViewController.size = self.verticalSizeClass == .regular ? 0.75 : 1.0
+        case .fog:
+            uiViewController.size = self.verticalSizeClass == .regular ? 1.0 : 1.5
         }
+
     }
 
 //    class Coordinator: ParticleViewControllerDelegate {
@@ -120,11 +128,13 @@ struct ParticleSettings {
         switch effect {
         case .snow:
             return UIImage(named: ["snowflake1", "snowflake2", "snowflake3"].randomElement()!)!
-        case .rain(let mist):
-            if !mist {
-                return UIImage(named: "Raindrop4")!
-            }
+        case .rain:
+            return UIImage(named: "Raindrop4")!
+        case .mist:
             return UIImage(named: "Mist")!
+        case .fog:
+            return UIImage(named: "Spray")!
+
         }
     }
 
@@ -136,12 +146,12 @@ struct ParticleSettings {
         case .snow:
             let fileNames = ["snowflake1", "snowflake2", "snowflake3"]
             images = [UIImage(named: fileNames.randomElement()!)!]
-        case .rain(let mist):
-            if mist {
-                images = [UIImage(named: "Mist")!]
-            } else {
-                images = [UIImage(named: "Raindrop2")!]
-            }
+        case .rain:
+            images = [UIImage(named: "Raindrop2")!]
+        case .mist:
+            images = [UIImage(named: "Mist")!]
+        case .fog:
+            images = [UIImage(named: "Spray")!]
 
         }
         return images
@@ -165,7 +175,7 @@ struct ParticleSettings {
             return ParticleSettings(direction: direction!, amount: amount, effect: effect)
         }
         if let rain {
-            let effect = WeatherEffect.rain(mist: false)
+            let effect = WeatherEffect.rain
             let amount = WeatherEffectAmount.amountForRain(rain)
             var direction: WeatherEffectDirection?
 
@@ -176,17 +186,18 @@ struct ParticleSettings {
             }
             return ParticleSettings(direction: direction!, amount: amount, effect: effect)
         } else if let conditions, conditions.atmosphereConditions == .mist {
-            let effect = WeatherEffect.rain(mist: true)
+            let effect = WeatherEffect.mist
             let amount = WeatherEffectAmount.regular
-            var direction: WeatherEffectDirection?
+            // mist looks best as a `straightDown` effect
+            let direction: WeatherEffectDirection = .straightDown
+            return ParticleSettings(direction: direction, amount: amount, effect: effect)
 
-            if let wind {
-                direction = WeatherEffectDirection.directionForWindSpeed(wind.speedCategory)
-            } else {
-                direction = WeatherEffectDirection.straightDown
-            }
-            return ParticleSettings(direction: direction!, amount: amount, effect: effect)
-
+        } else if let conditions, conditions.atmosphereConditions == .fog {
+            let effect = WeatherEffect.fog
+            let amount = WeatherEffectAmount.regular
+            // fog looks best as a `angleRightHard` effect
+            let direction: WeatherEffectDirection = .angleRightHard
+            return ParticleSettings(direction: direction, amount: amount, effect: effect)
         }
         return nil
     }
@@ -240,19 +251,11 @@ struct ParticleSettings {
 
     }
 
-    enum WeatherEffect: Equatable {
+    enum WeatherEffect: Int, Equatable {
         case snow
-        case rain(mist: Bool)
-
-        public static func == (lhs: WeatherEffect, rhs: WeatherEffect) -> Bool {
-            if case .rain(let lhsMist) = lhs, case .rain(let rhsMist) = rhs {
-                return lhsMist == rhsMist
-            } else if case .snow = lhs, case .snow = rhs {
-                return true
-            }
-            return false
-
-        }
+        case rain
+        case mist
+        case fog
     }
 }
 
@@ -284,6 +287,7 @@ class ParticleSceneKitViewController: UIViewController {
     var amount: WeatherEffectAmount
     var tintColor: UIColor?
     var sceneBackgroundColor: UIColor
+    var useSubsystem: Bool
 
     private var planePositionOrigin: Float = 3.05
 
@@ -307,7 +311,8 @@ class ParticleSceneKitViewController: UIViewController {
          sizeVariation: CGFloat = 0.25,
          subsystemSize: CGFloat,
          direction: WeatherEffectDirection = .straightDown,
-         amount: WeatherEffectAmount) {
+         amount: WeatherEffectAmount,
+         useSubsystem: Bool) {
         self.sceneBackgroundColor = backgroundColor
         self.effect = effect
         self.tintColor = tintColor
@@ -317,6 +322,7 @@ class ParticleSceneKitViewController: UIViewController {
         self.sizeVariation = sizeVariation
         self.direction = direction
         self.amount = amount
+        self.useSubsystem = useSubsystem
 
         super.init(nibName: nil, bundle: nil)
     }
@@ -482,8 +488,10 @@ class ParticleSceneKitViewController: UIViewController {
         var acceleration: SCNVector3!
         switch direction {
         case .straightDown:
-            if case .rain(let useMist) = effect {
-                acceleration = useMist ? SCNVector3(0.0, -0.5, 0) : SCNVector3(0.0, -2, 0)
+            if effect == .rain {
+                acceleration = SCNVector3(0.0, -2, 0)
+            } else if effect == .mist {
+                acceleration = SCNVector3(0.0, -0.5, 0)
             } else {
                 acceleration = SCNVector3(0.0, -2, 0)
             }
@@ -501,7 +509,7 @@ class ParticleSceneKitViewController: UIViewController {
             acceleration = SCNVector3(-0.5, -2, 0)
             emitterPosition = SCNMatrix4MakeTranslation(2.5, 7, 0)
         case .leftToRight:
-            acceleration = SCNVector3(0.50, 0, 0)
+            acceleration = SCNVector3(0.50, -1, 0)
             emitterPosition = SCNMatrix4MakeTranslation(-8, 4, 0)
         }
         return (acceleration, emitterPosition)
@@ -539,28 +547,34 @@ class ParticleSceneKitViewController: UIViewController {
 
         particleSystem.particleColor = color
         switch effect {
-        case .rain(let mist):
-            if !mist {
-                particleSystem.particleLifeSpan = 7
-                particleSystem.stretchFactor = -0.25
-                particleSystem.warmupDuration = 2.0
-            } else {
-                particleSystem.particleLifeSpan = 12
-                particleSystem.stretchFactor = 0
-                particleSystem.speedFactor = 0.4
-                // Need a faster warmup so mist appears quickly
-                // mist is slower than other effects, so faster
-                // warmup ensures the `mist` appears quickly.
-                particleSystem.warmupDuration = 13.0
-            }
+        case .mist:
+            particleSystem.particleLifeSpan = 12
+            particleSystem.stretchFactor = 0
+            particleSystem.speedFactor = 0.4
+            // Need a faster warmup so mist appears quickly
+            // mist is slower than other effects, so faster
+            // warmup ensures the `mist` appears quickly.
+            particleSystem.warmupDuration = 13.0
+            particleSystem.particleAngle = self.particleAngle(effect: effect, direction: direction)
+        case .rain:
+            particleSystem.particleLifeSpan = 7
+            particleSystem.stretchFactor = -0.25
+            particleSystem.warmupDuration = 2.0
+            particleSystem.particleAngle = self.particleAngle(effect: effect, direction: direction)
+        case .fog:
+            particleSystem.particleLifeSpan = 12
+            particleSystem.stretchFactor = 0
+            particleSystem.speedFactor = 0.4
+            particleSystem.warmupDuration = 13.0
+            particleSystem.particleAngle = 0.0
         default:
             particleSystem.warmupDuration = 2.0
             particleSystem.spreadingAngle = 35
             particleSystem.particleLifeSpan = 7
             particleSystem.stretchFactor = 0
+            particleSystem.particleAngle = self.particleAngle(effect: effect, direction: direction)
         }
 
-        particleSystem.particleAngle = self.particleAngle(effect: effect, direction: direction)
         // Gravity effect
         let (acceleration, emitterPosition) = accelerationAndEmitterPosition(effect: effect, direction: direction)
         particleSystem.acceleration = acceleration
@@ -570,12 +584,20 @@ class ParticleSceneKitViewController: UIViewController {
         particleSystem.blendMode = .alpha
         particleSystem.isLightingEnabled = false
         particleSystem.orientationMode = .billboardScreenAligned
-        particleSystem.colliderNodes = [plane1]
-        particleSystem.systemSpawnedOnCollision = self.splashEffect(image: self.subsystemImage ?? image,
-                                                                    size: self.subsystemSize,
-                                                                    color: color,
-                                                                    birthRate: 4)
-        particleSystem.particleDiesOnCollision = true
+        
+        if useSubsystem {
+            particleSystem.particleDiesOnCollision = true
+            particleSystem.colliderNodes = [plane1]
+            particleSystem.systemSpawnedOnCollision = self.splashEffect(image: self.subsystemImage ?? image,
+                                                                        size: self.subsystemSize,
+                                                                        color: color,
+                                                                        birthRate: 4)
+        }
+        else {
+            particleSystem.particleDiesOnCollision = false
+            particleSystem.systemSpawnedOnCollision = nil
+            particleSystem.colliderNodes = nil
+        }
 
         // Add particle system to scene
         scnScene.addParticleSystem(particleSystem, transform: emitterPosition)

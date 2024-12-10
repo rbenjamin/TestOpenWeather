@@ -13,3 +13,5 @@ Features Utilized:
     - Task / Swift Concurrency
     - SceneKit
     - UIKit
+    - Codable
+    - SwiftData

@@ -126,9 +126,9 @@
             filePath = "Whether/Particle Views/ParticleSceneKitView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "313"
-            endingLineNumber = "313"
-            landmarkName = "init(effect:backgroundColor:images:tintColor:size:sizeVariation:subsystemSize:direction:amount:)"
+            startingLineNumber = "318"
+            endingLineNumber = "318"
+            landmarkName = "init(effect:backgroundColor:images:tintColor:size:sizeVariation:subsystemSize:direction:amount:useSubsystem:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -407,22 +407,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "2A46FC4C-6961-4A81-B452-70348C4BD320"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Whether/Particle Views/ParticleSceneKitView.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "179"
-            endingLineNumber = "179"
-            landmarkName = "new(rain:snow:wind:conditions:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "9A98E496-616D-4043-BE21-6102720579C8"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
@@ -446,8 +430,8 @@
             filePath = "Whether/Particle Views/ParticleSceneKitView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "387"
-            endingLineNumber = "387"
+            startingLineNumber = "393"
+            endingLineNumber = "393"
             landmarkName = "viewWillTransition(to:with:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -462,8 +446,8 @@
             filePath = "Whether/Particle Views/ParticleSceneKitView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "295"
-            endingLineNumber = "295"
+            startingLineNumber = "299"
+            endingLineNumber = "299"
             landmarkName = "yOffset"
             landmarkType = "24">
          </BreakpointContent>
@@ -471,49 +455,97 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "370F5E80-4705-4803-AE81-D0488BDA4F9C"
+            uuid = "1A3BA73F-282F-465B-B214-46B527CB0FA4"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Whether/Particle Views/ParticleSceneKitView.swift"
+            filePath = "Whether/Component Views/GaugeView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "60"
-            endingLineNumber = "60"
-            landmarkName = "init(settings:backgroundColor:yOffset:verticalSizeClass:)"
+            startingLineNumber = "260"
+            endingLineNumber = "260"
+            landmarkName = "rotate(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "4B69247E-41DB-45BE-9B10-FE2E6947D334"
+            uuid = "2DFFA571-4C76-4C68-B61D-4F491C166FF1"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Whether/Particle Views/ParticleSceneKitView.swift"
+            filePath = "Whether/Component Views/GaugeView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "61"
-            endingLineNumber = "61"
-            landmarkName = "init(settings:backgroundColor:yOffset:verticalSizeClass:)"
+            startingLineNumber = "265"
+            endingLineNumber = "265"
+            landmarkName = "normalize(_:range:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "E9CDB93D-9CF4-4A2E-8E68-D30D596DBD42"
+            uuid = "7DB7C39B-C977-4294-A9B7-F28DC7FD8442"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Whether/Particle Views/ParticleSceneKitView.swift"
+            filePath = "Whether/Component Views/GaugeView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "64"
-            endingLineNumber = "64"
-            landmarkName = "init(settings:backgroundColor:yOffset:verticalSizeClass:)"
+            startingLineNumber = "266"
+            endingLineNumber = "266"
+            landmarkName = "normalize(_:range:)"
             landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "A15ABD85-A22C-4A0A-860B-85800D99CD23"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Whether/Weather Condition Subviews (LocationCard)/MainWeatherDetails.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "138"
+            endingLineNumber = "138"
+            landmarkName = "body"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "04E443D9-1814-4C5A-AAE8-BD1ED12806C0"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Whether/Weather Condition Subviews (LocationCard)/MainWeatherDetails.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "132"
+            endingLineNumber = "132"
+            landmarkName = "body"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "BE1F6DF3-DDF1-4708-A647-0BCF0E5F2AF6"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Whether/Weather Condition Subviews (LocationCard)/MainWeatherDetails.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "134"
+            endingLineNumber = "134"
+            landmarkName = "body"
+            landmarkType = "24">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
